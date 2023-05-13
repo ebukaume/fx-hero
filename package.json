@@ -4,7 +4,8 @@
   "description": "An Application to monitor, analyse and trade FX",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "build": "tsc"
   },
   "keywords": [],
   "author": "",
@@ -15,6 +16,15 @@
     "@types/node": "^18.16.6",
     "jest": "^29.5.0",
     "ts-jest": "^29.1.0",
-    "ts-node": "^10.9.1"
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.4"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.3",
+    "env-var": "^7.3.1",
+    "grammy": "^1.16.0",
+    "indicatorts": "^1.0.14",
+    "metaapi.cloud-sdk": "^22.1.0",
+    "toad-scheduler": "^2.2.0"
   }
 }

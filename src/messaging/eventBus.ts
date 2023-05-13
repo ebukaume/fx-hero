@@ -1,4 +1,4 @@
-type Topic = 'FEED' | 'SET_UP'
+type Topic = 'PRICE_FEED' | 'TRADE_SIGNAL'
 
 export class EventBus {
   private subscriptions: Map<Topic, Function[]>;

@@ -2,9 +2,19 @@
 An Application to monitor, analyse and trade FX
 
 #### Todo
-1. Setup typescript
-2. Implement EventBus
-3. Implement feed streaming
-4. Implement time-series repository (Redis)
-5. Implement CandleStick to Heiken Ashi converter
-6.  Implement Exponential Moving Average indicator
+2. Implement analysis class that use HA and indicator module to search for signals
+3. Implement a cron job that scans for signals every 5 mins (configurable)
+
+
+### Other strategies to try
+1. In the direction of the trend, enter at healthy bar, exit after 2 consecutive lizards.
+  1. Handler Errors
+  2. Example:
+    For Buy:
+      Trend is up (8, 21, 50) -
+      At least 3 red bars (not just lizards) -
+      No more than 3 green bars before the signal bar
+      Bullish bar
+      Stoploss at swing low
+      3R target
+      Exits at the first close below EMA8 (no matter the P/L)

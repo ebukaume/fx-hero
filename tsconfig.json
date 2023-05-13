@@ -1,5 +1,7 @@
 {
   "extends": "@tsconfig/node18/tsconfig.json",
-  "ourDir": "dist",
-  "src": "src"
+  "src": "src",
+  "compilerOptions": {
+    "outDir": "dist"
+  }
 }

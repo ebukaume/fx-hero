@@ -5,8 +5,8 @@ describe('EventBus', () => {
     const handler = jest.fn();
 
     const bus = EventBus.build();
-    bus.subscribe('FEED', handler);
-    bus.publish<string>('FEED', 'TEST');
+    bus.subscribe('PRICE_FEED', handler);
+    bus.publish<string>('PRICE_FEED', 'TEST');
 
     expect(handler).toHaveBeenCalledTimes(1);
     expect(handler).toHaveBeenCalledWith('TEST');
@@ -16,8 +16,8 @@ describe('EventBus', () => {
     const handler = jest.fn();
 
     const bus = EventBus.build();
-    bus.subscribe('FEED', handler);
-    bus.publish<string>('SET_UP', 'TEST');
+    bus.subscribe('PRICE_FEED', handler);
+    bus.publish<string>('TRADE_SIGNAL', 'TEST');
 
     expect(handler).not.toHaveBeenCalled();
   });
