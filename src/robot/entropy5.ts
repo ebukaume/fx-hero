@@ -1,11 +1,14 @@
 import MetaApi from "metaapi.cloud-sdk";
 import { Trader } from "../account/trader";
 import { Indicator } from "../analysis/indicator";
-import { Symbol, Terminal } from "../marketFeed/terminal";
+import { Terminal, Timeframe } from "../marketFeed/terminal";
 import { Telegram } from "../notification/telegram";
 import { Bot } from "grammy";
 import { EntropyStrategy, Signal } from "../strategy/entropy";
 import { Bar } from "../analysis/bar";
+import { AccountManagement } from "../account/management";
+import { logger } from "../util/logger";
+import { Symbol } from "../config";
 
 interface Config {
   chatId: string;
@@ -13,55 +16,72 @@ interface Config {
   grammyBotToken: string;
 }
 
-export class Entropy5 {
+interface Input {
+  symbols: Symbol[];
+  riskAmountPerTrade: number;
+}
+
+export class Entropy5Robot {
   private readonly NUMBER_OF_BARS_TO_FETCH = 100;
+  private readonly TIME_FRAME: Timeframe = '1d';
 
   constructor(
     private terminal: Terminal,
     private trader: Trader,
+    private accountManagment: AccountManagement,
     private telegram: Telegram,
   ) { }
 
-  static build(config: Config): Entropy5 {
+  static build(config: Config): Entropy5Robot {
     const { metaAccessToken, chatId, grammyBotToken } = config;
 
     const metaApiClient = new MetaApi(metaAccessToken);
 
     const terminal = Terminal.build({ client: metaApiClient });
-    const trader = Trader.build({ client: metaApiClient })
+    const trader = Trader.build({ client: metaApiClient });
+    const accountManagement = AccountManagement.build({ client: metaApiClient });
+
     const telegram = Telegram.build({ client: new Bot(grammyBotToken) }, { chatId });
 
-    return new this(terminal, trader, telegram);
+    return new this(terminal, trader, accountManagement, telegram);
   }
 
-  /**
-   * get price data
-   * analyse data
-   * if signal
-   *  buy/sell
-   *  notify telegram
-  */
-  async exec(symbols: Symbol[], lot: number): Promise<void> {
-    const priceData = await this.terminal.getHeikenAshiBarsForSymbols(symbols, '5m', this.NUMBER_OF_BARS_TO_FETCH);
+  async exec({ symbols, riskAmountPerTrade }: Input): Promise<void> {
+    logger.withNewLine().info('Checking for signals!', { NUMBER_OF_SYMBOLS: symbols.length });
 
-    await Promise.all(priceData.map(data => this.process(data, lot)))
+    const priceData = await this.terminal.getHeikenAshiBarsForSymbols(symbols, this.TIME_FRAME, this.NUMBER_OF_BARS_TO_FETCH);
+
+    await Promise.all(priceData.map(data => this.process(data, riskAmountPerTrade)))
   }
 
-  private async process(bars: Bar[], lot: number): Promise<void> {
+  private async process(bars: Bar[], riskAmountPerTrade: number): Promise<void> {
     const strategy = EntropyStrategy.build(Indicator);
     const signal = strategy.signal(bars);
 
     if (!signal) {
-      console.log(`No signal at this time for ${bars[0].symbol}`);
+      logger.info('No signal at this time', { symbol: bars[0].symbol });
       return;
     }
 
-    await this.trader.open({
+    const lot = this.calculateLotSize(riskAmountPerTrade, signal.riskInPips);
+
+    const orderId = await this.trader.open({
       ...signal,
       lot
     });
 
+    const { balance, currency } = await this.accountManagment.getAccountInformation();
     await this.notify(signal, bars[0]);
+
+    logger.info('Position opened!', { orderId, lot, currency, balance });
+  }
+
+  private calculateLotSize(amount: number, riskInPips: number): number {
+    /**
+     * 0.01 => 20 pips == 2
+     * 2 / (20 / 10) = 0.01
+     */
+    return amount / (riskInPips * 10);
   }
 
   private async notify(signal: Signal, bar: Bar): Promise<void> {
@@ -72,7 +92,7 @@ export class Entropy5 {
     await this.telegram.sendMessage({
       ...signal,
       risk,
-      reward
+      reward,
     });
   }
 

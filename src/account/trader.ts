@@ -1,11 +1,12 @@
 import MetaApi, { RpcMetaApiConnectionInstance } from 'metaapi.cloud-sdk';
-import { Symbol } from '../marketFeed/terminal';
+import { logger } from '../util/logger';
+import { Symbol } from '../config';
 
 interface TraderDriver {
   client: MetaApi
 }
 
-type TradeType = 'BUY' | 'SELL';
+export type TradeType = 'BUY' | 'SELL';
 
 interface TraderParam {
   type: TradeType;
@@ -29,7 +30,7 @@ export class Trader {
   async open(param: TraderParam): Promise<string> {
     const { type, symbol, lot, stoploss, target } = param;
 
-    await this.connectToBroker()
+    await this.connectToBroker();
 
     switch (type) {
       case 'BUY':
@@ -46,26 +47,33 @@ export class Trader {
 
     const result = await Promise.all(orderIds.map(orderId => this.connection.closePosition(orderId, {})));
 
-    await this.disconnectFromBroker();
-
-    console.log({ result })
+    this.disconnectFromBroker();
   }
 
   private async connectToBroker(): Promise<void> {
-    const account = await this.client.metatraderAccountApi.getAccountByToken();
-    this.connection = account.getRPCConnection();
+    try {
+      const account = await this.client.metatraderAccountApi.getAccountByToken();
+      this.connection = account.getRPCConnection();
 
-    await this.connection.connect();
-    await this.connection.waitSynchronized();
+      await this.connection.connect();
+      await this.connection.waitSynchronized();
+    } catch (error) {
+      logger.error('Error connecting to the broker', { error });
+      process.exit(0);
+    }
   }
 
-  private async disconnectFromBroker(): Promise<void> {
-    await this.client.close();
+  private disconnectFromBroker(): void {
+    try {
+      this.client.close();
+    } catch (error) {
+      logger.error('Error disconnecting from the broker', { error });
+    }
   }
 
   private async buy(symbol: Symbol, lot: number, stoploss: number, target: number): Promise<string> {
     const result = await this.connection.createMarketBuyOrder(symbol.toString(), lot, stoploss, target);
-    this.client.close();
+    this.disconnectFromBroker();
 
     if (result.stringCode === 'ERR_NO_ERROR') {
       throw new Error(result.stringCode)
@@ -76,7 +84,7 @@ export class Trader {
 
   private async sell(symbol: Symbol, lot: number, stoploss: number, target: number): Promise<string> {
     const result = await this.connection.createMarketSellOrder(symbol.toString(), lot, stoploss, target);
-    this.client.close();
+    this.disconnectFromBroker();
 
     if (result.stringCode === 'ERR_NO_ERROR') {
       throw new Error(result.stringCode)

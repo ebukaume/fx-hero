@@ -2,8 +2,7 @@
 An Application to monitor, analyse and trade FX
 
 #### Todo
-2. Implement analysis class that use HA and indicator module to search for signals
-3. Implement a cron job that scans for signals every 5 mins (configurable)
+1. Dockerize app
 
 
 ### Other strategies to try

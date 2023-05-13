@@ -1,6 +1,7 @@
 import { Bot } from "grammy";
-import { Symbol } from '../marketFeed/terminal';
-import { SignalType } from "../strategy/entropy";
+import { TradeType } from "../account/trader";
+import { logger } from "../util/logger";
+import { Symbol } from "../config";
 
 export interface TelegramDriver {
   client: Bot
@@ -11,7 +12,7 @@ export interface TelegramConfig {
 }
 
 export interface SignalInput {
-  type: SignalType;
+  type: TradeType;
   symbol: Symbol;
   entry: number;
   stoploss: number;
@@ -42,10 +43,12 @@ export class Telegram {
     ${(new Date()).toUTCString()}
     `;
 
-    await this.client.api.sendMessage(this.chatId, message, { parse_mode: 'HTML' })
+    await this.client.api.sendMessage(this.chatId, message, { parse_mode: 'HTML' });
+
+    logger.info('Notified Telegram Bot', { input, chatId: this.chatId });
   }
 
-  private getArrow(type: SignalType): string {
+  private getArrow(type: TradeType): string {
     return type === 'BUY' ? '&#8679; &#8679; &#8679;' : '&#8681; &#8681; &#8681;'
   }
 }

@@ -43,7 +43,7 @@ export class HeikenAshiContinuation {
     const trend = this.deduceTrend(fastEma, midEma, slowEma);
     const latestBar = this.bars[0];
 
-    console.table(this.bars.slice(0, 20).map(bar => ({ ...bar, type: bar.type })))
+    // console.table(this.bars.slice(0, 20).map(bar => ({ ...bar, type: bar.type })))
 
     switch (trend) {
       case 'BULLISH':

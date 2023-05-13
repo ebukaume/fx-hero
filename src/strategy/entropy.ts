@@ -1,15 +1,15 @@
+import { TradeType } from "../account/trader";
 import { Bar } from "../analysis/bar";
 import { Indicator } from "../analysis/indicator";
-import { Symbol } from "../marketFeed/terminal";
+import { Symbol } from "../config";
 
 type Trend = 'BULLISH' | 'BEARISH' | 'FLAT';
 
-export type SignalType = 'BUY' | 'SELL';
-
 export interface Signal {
-  type: SignalType;
+  type: TradeType;
   symbol: Symbol,
   entry: number;
+  riskInPips: number;
   stoploss: number;
   target: number;
   rewardToRiskRatio: number;
@@ -20,14 +20,13 @@ export class EntropyStrategy {
   private readonly SLOW_EMA_PERIOD = 50;
   private readonly RETRACEMENT_LOOK_BACK_WINDOW = 3;
   private readonly FRESHNESS_LOOK_BACK_WINDOW = 4;
-  private readonly WRAP_RATE_THRESHOLD = 0.6;
+  private readonly WRAP_RATE_THRESHOLD = 0.4;
   private readonly STOPLOSS_CLEARANCE = 2;
   private readonly REWARD_TO_RISK_RATIO = 1.1;
 
   private fastEma: number[] = [];
   private slowEma: number[] = [];
   private bars: Bar[] = [];
-  private trend: Trend = 'FLAT';
 
   private constructor(private technicalAnalysis: typeof Indicator) { }
 
@@ -40,14 +39,9 @@ export class EntropyStrategy {
     this.fastEma = this.technicalAnalysis.exponentialMovingAverage({ prices: this.bars, source: 'close', length: this.FAST_EMA_PERIOD })
     this.slowEma = this.technicalAnalysis.exponentialMovingAverage({ prices: this.bars, source: 'close', length: this.SLOW_EMA_PERIOD })
 
-    this.trend = this.deduceTrend();
-
     if (this.trend === 'FLAT') {
       return;
     }
-
-    const latest6Bars = this.bars.slice(0, 6);
-    console.table(latest6Bars.map(bar => ({ ...bar, type: bar.type })))
 
     switch (this.trend) {
       case 'BULLISH':
@@ -66,14 +60,15 @@ export class EntropyStrategy {
       type === 'BULL' &&
       this.isSignal()
     ) {
-      const margin = this.stopMargin;
+      const riskInPips = this.riskInPips;
 
       return {
         type: 'BUY',
         symbol,
         entry,
-        stoploss: this.stoploss(margin),
-        target: this.target(margin),
+        riskInPips: this.toPip(riskInPips),
+        stoploss: this.stoploss(riskInPips),
+        target: this.target(riskInPips),
         rewardToRiskRatio: this.REWARD_TO_RISK_RATIO,
       }
     };
@@ -86,22 +81,22 @@ export class EntropyStrategy {
       type === 'BEAR' &&
       this.isSignal()
     ) {
-      const margin = this.stopMargin;
+      const riskInPips = this.riskInPips;
 
       return {
         type: 'SELL',
         symbol,
         entry,
-        stoploss: this.stoploss(margin),
-        target: this.target(margin),
+        riskInPips,
+        stoploss: this.stoploss(riskInPips),
+        target: this.target(riskInPips),
         rewardToRiskRatio: this.REWARD_TO_RISK_RATIO,
       }
     };
   }
 
   /**
-   * has retraced into mid ema (21) - 
-   * changed color recently - 
+   * TODO - Consider these?
    * Not too many lizards ***
    * Not new high
    */
@@ -113,21 +108,20 @@ export class EntropyStrategy {
   }
 
   /**
-   * FLAT if sideways
+   * FLAT if sideways or spent too much time around fast ema
    * BULLISH if fast > slow
    * BEARISH if fast < slow
    */
-  private deduceTrend(): Trend {
+  private get trend(): Trend {
     const fastEma = this.fastEma[0];
     const slowEma = this.slowEma[0];
     const lookBackSize = this.SLOW_EMA_PERIOD / 2;
 
-    const emas = this.slowEma.slice(0, Math.ceil(lookBackSize));
     const bars = this.bars.slice(0, Math.ceil(lookBackSize));
-    const wrappers = bars.filter((bar, index) => this.isWithinRange(bar.low, bar.high, emas[index]));
+    const wrappers = bars.filter((bar, index) => this.isWithinRange(bar.high, bar.low, this.fastEma[index]));
     const wrapRatio = wrappers.length / lookBackSize;
 
-    if (wrapRatio >= this.WRAP_RATE_THRESHOLD) {
+    if (wrapRatio > this.WRAP_RATE_THRESHOLD) {
       return 'FLAT';
     }
 
@@ -142,11 +136,8 @@ export class EntropyStrategy {
     return 'FLAT';
   }
 
-  private isWithinRange(pointA: number, pointB: number, target: number): boolean {
-    const upperLimit = Math.max(pointA, pointB);
-    const lowerLimit = Math.min(pointA, pointB);
-
-    return target >= lowerLimit && target <= upperLimit;
+  private isWithinRange(upperLimit: number, lowerLimit: number, target: number): boolean {
+    return upperLimit >= target && lowerLimit <= target;
   }
 
   private hasRetracedIntoFastEma(): boolean {
@@ -177,7 +168,7 @@ export class EntropyStrategy {
     }
   }
 
-  private get stopMargin(): number {
+  private get riskInPips(): number {
     const { close: entryPrice } = this.bars[0];
 
     switch (this.trend) {
@@ -185,12 +176,12 @@ export class EntropyStrategy {
         const swingLow = Math.min(...this.bars.slice(0, this.FRESHNESS_LOOK_BACK_WINDOW).map(bar => bar.low));
         const stopLevelLow = swingLow + this.toPip(this.STOPLOSS_CLEARANCE);
 
-        return Math.abs(stopLevelLow - entryPrice);
+        return this.toPip(Math.abs(stopLevelLow - entryPrice));
       case "BEARISH":
         const swingHigh = Math.min(...this.bars.slice(0, this.FRESHNESS_LOOK_BACK_WINDOW).map(bar => bar.high));
         const stopLevelHigh = swingHigh + this.toPip(this.STOPLOSS_CLEARANCE);
 
-        return Math.abs(stopLevelHigh - entryPrice);
+        return this.toPip(Math.abs(stopLevelHigh - entryPrice));
       default:
         return 0;
     }

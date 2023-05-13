@@ -1,5 +1,6 @@
 
 import { ToadScheduler, AsyncTask, CronSchedule, CronJob } from 'toad-scheduler';
+import { logger } from '../util/logger';
 
 interface JobInput {
   name: string;
@@ -23,7 +24,7 @@ export class Job {
     });
   }
 
-  static handleError(err: Error): void {
-    console.log('Error running job', err.message);
+  static handleError(error: Error): void {
+    logger.error('Error running job', { error });
   }
 }

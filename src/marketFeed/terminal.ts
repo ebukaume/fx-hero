@@ -1,19 +1,15 @@
 import MetaApi, { MetatraderCandle } from 'metaapi.cloud-sdk';
 import { Bar } from '../analysis/bar';
+import { SYMBOLS_MAPPING, Symbol } from '../config';
 
-type Timeframe = '1m' | '5m' | '15m' | '30m' | '1h' | '4h' | '1d' | '1w' | '1mn';
-export type Symbol = 'EURUSDb' | 'GBPJPYb' | 'EURJPYb';
+export type Timeframe = '1m' | '5m' | '15m' | '30m' | '1h' | '4h' | '1d' | '1w' | '1mn';
 
 export interface TerminalDriver {
   client: MetaApi
 }
 
 export class Terminal {
-  readonly digits: Record<Symbol, number> = {
-    EURUSDb: 5,
-    GBPJPYb: 3,
-    EURJPYb: 3,
-  };
+  readonly digits: Record<Symbol, number> = SYMBOLS_MAPPING;
 
   private constructor(
     private client: MetaApi,
@@ -30,7 +26,7 @@ export class Terminal {
     this.client.close();
     const digits = this.digits[symbol]
 
-    return this.toBar(symbol, candles, digits)
+    return this.toBar(timeframe, symbol, candles, digits)
       .reverse();
   }
 
@@ -41,13 +37,14 @@ export class Terminal {
   async getHeikenAshiBars(symbol: Symbol, timeframe: Timeframe, count?: number): Promise<Bar[]> {
     const candles = await this.getCandlestickBars(symbol, timeframe, count);
 
-    return this.toHeikenAshi(symbol, candles)
+    return this.toHeikenAshi(candles)
   }
 
-  private toBar(symbol: Symbol, candles: MetatraderCandle[], digits: number): Bar[] {
+  private toBar(timeframe: Timeframe, symbol: Symbol, candles: MetatraderCandle[], digits: number): Bar[] {
     return candles.map(candle => new Bar({
       digits,
       symbol,
+      timeframe,
       startTime: candle.time,
       open: this.toDecimal(candle.open, digits),
       high: this.toDecimal(candle.high, digits),
@@ -56,11 +53,11 @@ export class Terminal {
     }));
   }
 
-  private toHeikenAshi(symbol: Symbol, candleSticks: Bar[]): Bar[] {
+  private toHeikenAshi(candleSticks: Bar[]): Bar[] {
     const firstCandleIndex = candleSticks.length - 1;
 
     return candleSticks.reduceRight<Bar[]>((result, candle, index, original) => {
-      const { open, high, low, close, startTime, digits } = candle;
+      const { open, high, low, close, digits } = candle;
       const previousHa = result[index + 1];
 
       const previousHaOpen = previousHa ? previousHa.open : original[firstCandleIndex].open;
@@ -72,9 +69,7 @@ export class Terminal {
       const haLow = this.toDecimal(Math.min(low, haOpen, haClose), digits);
 
       result[index] = new Bar({
-        digits,
-        symbol,
-        startTime,
+        ...candle,
         open: haOpen,
         high: haHigh,
         low: haLow,
