@@ -14,9 +14,7 @@ export interface BaseLambdaProps {
   group: "robot";
 }
 
-type NewType = BaseStackProps & BaseLambdaProps;
-
-export type LambdaProps = NewType;
+export type LambdaProps = BaseStackProps & BaseLambdaProps;
 
 export class CustomLambda {
   readonly instance: NodejsFunction;

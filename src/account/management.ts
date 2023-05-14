@@ -1,7 +1,7 @@
 import MetaApi, { RpcMetaApiConnectionInstance } from "metaapi.cloud-sdk";
 import { TradeType } from "./trader";
 import { logger } from "../util/logger";
-import { Symbol } from "../config";
+import { Pair } from "../config";
 
 interface AccountManagementDriver {
   client: MetaApi;
@@ -16,7 +16,7 @@ interface AccountInformation {
 interface Position {
   id: number;
   type: TradeType;
-  symbol: Symbol;
+  pair: Pair;
   openedAt: Date;
   updateAt: Date;
   openPrice: number;
@@ -66,7 +66,7 @@ export class AccountManagement {
       ({
         id,
         type,
-        symbol,
+        symbol: pair,
         time: openedAt,
         updateTime: updateAt,
         openPrice,
@@ -84,7 +84,7 @@ export class AccountManagement {
       }) => ({
         id,
         type: type === "POSITION_TYPE_BUY" ? "BUY" : "SELL",
-        symbol: symbol as Symbol,
+        pair: pair as Pair,
         openedAt,
         updateAt,
         openPrice,
@@ -113,7 +113,6 @@ export class AccountManagement {
       await this.connection.waitSynchronized();
     } catch (error) {
       logger.error("Error connecting to the broker", { error });
-      process.exit(0);
     }
   }
 

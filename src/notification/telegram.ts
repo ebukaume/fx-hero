@@ -1,7 +1,7 @@
 import { Bot } from "grammy";
 import { TradeType } from "../account/trader";
 import { logger } from "../util/logger";
-import { Symbol } from "../config";
+import { Pair } from "../config";
 
 export interface TelegramDriver {
   client: Bot;
@@ -13,7 +13,7 @@ export interface TelegramConfig {
 
 export interface SignalInput {
   type: TradeType;
-  symbol: Symbol;
+  pair: Pair;
   entry: number;
   stoploss: number;
   target: number;
@@ -29,14 +29,12 @@ export class Telegram {
     return new Telegram(driver.client, config.chatId);
   }
 
-  async sendMessage(input: SignalInput): Promise<void> {
+  async sendSignal(input: SignalInput): Promise<void> {
     const arrow = this.getArrow(input.type);
     const message = `
     ${arrow} ${input.type} Signal ${arrow}
 
-    <strong>${input.type.toString()} ${input.symbol} now @ ${
-      input.entry
-    }</strong>
+    <strong>${input.type.toString()} ${input.pair} now @ ${input.entry}</strong>
 
     Stoploss: ${input.stoploss} (-${input.risk})
     target: ${input.target} (+${input.reward})

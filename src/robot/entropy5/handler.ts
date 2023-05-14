@@ -1,4 +1,4 @@
-import { Symbol } from "../../config";
+import { Pair } from "../../config";
 import { HandlerBuilder } from "../../util/handlerBuilder";
 import { Entropy5RobotUsecase } from "./usecase";
 
@@ -6,7 +6,7 @@ export interface Entropy5RobotConfig {
   chatId: string;
   metaAccessToken: string;
   grammyBotToken: string;
-  symbols: Symbol[];
+  symbols: Pair[];
   riskAmountPerTrade: number;
 }
 

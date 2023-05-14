@@ -1,13 +1,13 @@
 import { TradeType } from "../account/trader";
 import { Bar } from "../analysis/bar";
 import { Indicator } from "../analysis/indicator";
-import { Symbol } from "../config";
+import { Pair } from "../config";
 
 type Trend = "BULLISH" | "BEARISH" | "FLAT";
 
 export interface Signal {
   type: TradeType;
-  symbol: Symbol;
+  pair: Pair;
   entry: number;
   riskInPips: number;
   stoploss: number;
@@ -62,39 +62,43 @@ export class EntropyStrategy {
   }
 
   private checkForBullishSignal(): Signal | undefined {
-    const { type, symbol, close: entry } = this.bars[0];
+    const { type, pair, close: entry } = this.bars[0];
 
-    if (type === "BULL" && this.isSignal()) {
-      const riskInPips = this.riskInPips;
+    // if (type !== "BULL" || !this.isSignal()) {
+    //   return;
+    // }
 
-      return {
-        type: "BUY",
-        symbol,
-        entry,
-        riskInPips: this.toPip(riskInPips),
-        stoploss: this.stoploss(riskInPips),
-        target: this.target(riskInPips),
-        rewardToRiskRatio: this.REWARD_TO_RISK_RATIO,
-      };
-    }
+    const riskInPips = this.riskInPips;
+
+    return {
+      type: "BUY",
+      pair,
+      entry,
+      riskInPips: this.toPip(riskInPips),
+      stoploss: this.stoploss(riskInPips),
+      target: this.target(riskInPips),
+      rewardToRiskRatio: this.REWARD_TO_RISK_RATIO,
+    };
   }
 
   private checkForBearishSignal(): Signal | undefined {
-    const { type, symbol, close: entry } = this.bars[0];
+    const { type, pair, close: entry } = this.bars[0];
 
-    if (type === "BEAR" && this.isSignal()) {
-      const riskInPips = this.riskInPips;
-
-      return {
-        type: "SELL",
-        symbol,
-        entry,
-        riskInPips,
-        stoploss: this.stoploss(riskInPips),
-        target: this.target(riskInPips),
-        rewardToRiskRatio: this.REWARD_TO_RISK_RATIO,
-      };
+    if (type !== "BEAR" || !this.isSignal()) {
+      return;
     }
+
+    const riskInPips = this.riskInPips;
+
+    return {
+      type: "SELL",
+      pair,
+      entry,
+      riskInPips,
+      stoploss: this.stoploss(riskInPips),
+      target: this.target(riskInPips),
+      rewardToRiskRatio: this.REWARD_TO_RISK_RATIO,
+    };
   }
 
   /**

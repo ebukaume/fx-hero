@@ -1,6 +1,6 @@
 import MetaApi, { MetatraderCandle } from "metaapi.cloud-sdk";
 import { Bar } from "../analysis/bar";
-import { SYMBOLS_MAPPING, Symbol } from "../config";
+import { PAIRS_MAPPING, Pair } from "../config";
 
 export type Timeframe =
   | "1m"
@@ -18,7 +18,7 @@ export interface TerminalDriver {
 }
 
 export class Terminal {
-  readonly digits: Record<Symbol, number> = SYMBOLS_MAPPING;
+  readonly digits: Record<Pair, number> = PAIRS_MAPPING;
 
   private constructor(private client: MetaApi) {}
 
@@ -27,47 +27,47 @@ export class Terminal {
   }
 
   async getCandlestickBars(
-    symbol: Symbol,
+    pair: Pair,
     timeframe: Timeframe,
     count?: number
   ): Promise<Bar[]> {
     const account = await this.client.metatraderAccountApi.getAccountByToken();
     const candles = await account.getHistoricalCandles(
-      symbol,
+      pair,
       timeframe,
       new Date(),
       count
     );
 
     this.client.close();
-    const digits = this.digits[symbol];
+    const digits = this.digits[pair];
 
-    return this.toBar(timeframe, symbol, candles, digits).reverse();
+    return this.toBar(timeframe, pair, candles, digits).reverse();
   }
 
   async getHeikenAshiBarsForSymbols(
-    symbols: Symbol[],
+    symbols: Pair[],
     timeframe: Timeframe,
     count?: number
   ): Promise<Bar[][]> {
     return Promise.all(
-      symbols.map((symbol) => this.getHeikenAshiBars(symbol, timeframe, count))
+      symbols.map((pair) => this.getHeikenAshiBars(pair, timeframe, count))
     );
   }
 
   async getHeikenAshiBars(
-    symbol: Symbol,
+    pair: Pair,
     timeframe: Timeframe,
     count?: number
   ): Promise<Bar[]> {
-    const candles = await this.getCandlestickBars(symbol, timeframe, count);
+    const candles = await this.getCandlestickBars(pair, timeframe, count);
 
     return this.toHeikenAshi(candles);
   }
 
   private toBar(
     timeframe: Timeframe,
-    symbol: Symbol,
+    pair: Pair,
     candles: MetatraderCandle[],
     digits: number
   ): Bar[] {
@@ -75,7 +75,7 @@ export class Terminal {
       (candle) =>
         new Bar({
           digits,
-          symbol,
+          pair,
           timeframe,
           startTime: candle.time,
           open: this.toDecimal(candle.open, digits),

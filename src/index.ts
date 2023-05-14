@@ -1,4 +1,4 @@
-// import { ACCESS_TOKEN, BOT_TOKEN, CHAT_ID, SYMBOLS } from "./config";
+// import { ACCESS_TOKEN, BOT_TOKEN, CHAT_ID, PAIRS } from "./config";
 // import { Job } from "./job";
 // import { Entropy5RobotUsecase } from "./robot/entropy5/usecase";
 
@@ -17,7 +17,7 @@
 //     {
 //       name: 'Entropy 5M',
 //       cronExpression: EVERY_5_MINUTES,
-//       executor: () => entropy.exec({ symbols: SYMBOLS, riskAmountPerTrade }),
+//       executor: () => entropy.exec({ symbols: PAIRS, riskAmountPerTrade }),
 //     }
 //   ])
 // }

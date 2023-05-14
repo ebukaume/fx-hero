@@ -1,6 +1,6 @@
 import MetaApi, { RpcMetaApiConnectionInstance } from "metaapi.cloud-sdk";
 import { logger } from "../util/logger";
-import { Symbol } from "../config";
+import { Pair } from "../config";
 
 interface TraderDriver {
   client: MetaApi;
@@ -10,7 +10,7 @@ export type TradeType = "BUY" | "SELL";
 
 interface TraderParam {
   type: TradeType;
-  symbol: Symbol;
+  pair: Pair;
   lot: number;
   stoploss: number;
   target: number;
@@ -26,15 +26,15 @@ export class Trader {
   }
 
   async open(param: TraderParam): Promise<string> {
-    const { type, symbol, lot, stoploss, target } = param;
+    const { type, pair, lot, stoploss, target } = param;
 
     await this.connectToBroker();
 
     switch (type) {
       case "BUY":
-        return this.buy(symbol, lot, stoploss, target);
+        return this.buy(pair, lot, stoploss, target);
       case "SELL":
-        return this.sell(symbol, lot, stoploss, target);
+        return this.sell(pair, lot, stoploss, target);
       default:
         throw new Error("Unknown trade type");
     }
@@ -73,13 +73,13 @@ export class Trader {
   }
 
   private async buy(
-    symbol: Symbol,
+    pair: Pair,
     lot: number,
     stoploss: number,
     target: number
   ): Promise<string> {
     const result = await this.connection.createMarketBuyOrder(
-      symbol.toString(),
+      pair.toString(),
       lot,
       stoploss,
       target
@@ -94,13 +94,13 @@ export class Trader {
   }
 
   private async sell(
-    symbol: Symbol,
+    pair: Pair,
     lot: number,
     stoploss: number,
     target: number
   ): Promise<string> {
     const result = await this.connection.createMarketSellOrder(
-      symbol.toString(),
+      pair.toString(),
       lot,
       stoploss,
       target

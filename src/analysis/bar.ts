@@ -1,8 +1,8 @@
-import { Symbol } from "../config";
+import { Pair } from "../config";
 import { Timeframe } from "../marketFeed/terminal";
 
 export interface BarInput {
-  symbol: Symbol;
+  pair: Pair;
   open: number;
   high: number;
   low: number;
@@ -18,7 +18,7 @@ export type OHLC = "open" | "high" | "low" | "close";
 
 export class Bar {
   readonly timeframe: Timeframe;
-  readonly symbol: Symbol;
+  readonly pair: Pair;
   readonly startTime: Date;
 
   readonly open: number;
@@ -30,11 +30,11 @@ export class Bar {
   private readonly DOMINANCE_THRESHOLD = 5;
 
   constructor(input: BarInput) {
-    const { open, close, high, low, digits, startTime, symbol, timeframe } =
+    const { open, close, high, low, digits, startTime, pair, timeframe } =
       input;
 
     this.timeframe = timeframe;
-    this.symbol = symbol;
+    this.pair = pair;
     this.startTime = startTime;
 
     this.open = open;
@@ -47,7 +47,7 @@ export class Bar {
   toJson() {
     return {
       startTime: this.startTime,
-      symbol: this.symbol,
+      pair: this.pair,
       timeframe: this.timeframe,
       type: this.type,
       color: this.color,

@@ -8,13 +8,13 @@ import { EntropyStrategy, Signal } from "../../strategy/entropy";
 import { Bar } from "../../analysis/bar";
 import { AccountManagement } from "../../account/management";
 import { logger } from "../../util/logger";
-import { Symbol } from "../../config";
+import { Pair } from "../../config";
 
 interface Config {
   chatId: string;
   metaAccessToken: string;
   grammyBotToken: string;
-  symbols: Symbol[];
+  symbols: Pair[];
   riskAmountPerTrade: number;
 }
 
@@ -27,7 +27,7 @@ export class Entropy5RobotUsecase {
     private trader: Trader,
     private accountManagment: AccountManagement,
     private telegram: Telegram,
-    private symbols: Symbol[],
+    private symbols: Pair[],
     private riskAmountPerTrade: number
   ) {}
 
@@ -65,7 +65,7 @@ export class Entropy5RobotUsecase {
 
   async exec(): Promise<void> {
     logger.info("Checking for signals!", {
-      NUMBER_OF_SYMBOLS: this.symbols.length,
+      NUMBER_OF_PAIRS: this.symbols.length,
     });
 
     const priceData = await this.terminal.getHeikenAshiBarsForSymbols(
@@ -82,7 +82,7 @@ export class Entropy5RobotUsecase {
     const signal = strategy.signal(bars);
 
     if (!signal) {
-      logger.info("No signal at this time", { symbol: bars[0].symbol });
+      logger.info("No signal at this time", { pair: bars[0].pair });
       return;
     }
 
@@ -91,16 +91,21 @@ export class Entropy5RobotUsecase {
       signal.riskInPips
     );
 
-    const orderId = await this.trader.open({
-      ...signal,
-      lot,
-    });
+    // const orderId = await this.trader.open({
+    //   ...signal,
+    //   lot,
+    // });
 
     const { balance, currency } =
       await this.accountManagment.getAccountInformation();
     await this.notify(signal, bars[0]);
 
-    logger.info("Position opened!", { orderId, lot, currency, balance });
+    logger.info("Position opened!", {
+      orderId: "orderId",
+      lot,
+      currency,
+      balance,
+    });
   }
 
   private calculateLotSize(amount: number, riskInPips: number): number {
@@ -116,7 +121,7 @@ export class Entropy5RobotUsecase {
     const risk = this.normalizePips(Math.abs(entry - stoploss), bar.digits);
     const reward = this.normalizePips(Math.abs(entry - target), bar.digits);
 
-    await this.telegram.sendMessage({
+    await this.telegram.sendSignal({
       ...signal,
       risk,
       reward,
