@@ -1,4 +1,4 @@
-import type { ScheduledEvent } from 'aws-lambda';
+import type { ScheduledEvent } from "aws-lambda";
 
 export type ScheduledLambdaHandler = (event: ScheduledEvent) => Promise<void>;
 

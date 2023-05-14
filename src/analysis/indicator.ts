@@ -1,5 +1,5 @@
-import { ema } from 'indicatorts';
-import { Bar, OHLC } from './bar';
+import { ema } from "indicatorts";
+import { Bar, OHLC } from "./bar";
 
 export interface EmaInput {
   prices: Bar[];
@@ -8,11 +8,15 @@ export interface EmaInput {
 }
 
 export class Indicator {
-  static exponentialMovingAverage({ prices, length, source }: EmaInput): number[] {
-    const result = ema(length, prices.map(p => p[source]).reverse());
+  static exponentialMovingAverage({
+    prices,
+    length,
+    source,
+  }: EmaInput): number[] {
+    const result = ema(length, prices.map((p) => p[source]).reverse());
     const digits = prices[0].digits;
 
-    return result.map(value => this.toDecimal(value, digits)).reverse();
+    return result.map((value) => this.toDecimal(value, digits)).reverse();
   }
 
   private static toDecimal(value: number, places: number): number {

@@ -14,31 +14,29 @@ interface AccountInformation {
 }
 
 interface Position {
-  id: number,
-  type: TradeType,
-  symbol: Symbol,
-  openedAt: Date,
-  updateAt: Date,
-  openPrice: number,
-  currentPrice: number,
-  currentTickValue: number,
-  stopLoss?: number,
-  takeProfit?: number,
-  volume: number,
-  swap: number,
-  profit: number,
-  clientId?: string,
-  commission: number,
-  reason: string,
-  brokerComment?: string
+  id: number;
+  type: TradeType;
+  symbol: Symbol;
+  openedAt: Date;
+  updateAt: Date;
+  openPrice: number;
+  currentPrice: number;
+  currentTickValue: number;
+  stopLoss?: number;
+  takeProfit?: number;
+  volume: number;
+  swap: number;
+  profit: number;
+  clientId?: string;
+  commission: number;
+  reason: string;
+  brokerComment?: string;
 }
 
 export class AccountManagement {
   private connection!: RpcMetaApiConnectionInstance;
 
-  private constructor(
-    private client: MetaApi,
-  ) { }
+  private constructor(private client: MetaApi) {}
 
   static build({ client }: AccountManagementDriver): AccountManagement {
     return new AccountManagement(client);
@@ -47,13 +45,14 @@ export class AccountManagement {
   async getAccountInformation(): Promise<AccountInformation> {
     await this.connectToBroker();
 
-    const { balance, equity, currency } = await this.connection.getAccountInformation();
+    const { balance, equity, currency } =
+      await this.connection.getAccountInformation();
     this.disconnectFromBroker();
 
     return {
       balance,
       equity,
-      currency
+      currency,
     };
   }
 
@@ -63,54 +62,57 @@ export class AccountManagement {
     const positions = await this.connection.getPositions();
     this.disconnectFromBroker();
 
-    return positions.map(({
-      id,
-      type,
-      symbol,
-      time: openedAt,
-      updateTime: updateAt,
-      openPrice,
-      currentPrice,
-      currentTickValue,
-      stopLoss,
-      takeProfit,
-      volume,
-      swap,
-      profit,
-      clientId,
-      commission,
-      reason,
-      brokerComment,
-    }) => ({
-      id,
-      type: type === 'POSITION_TYPE_BUY' ? 'BUY' : 'SELL',
-      symbol: symbol as Symbol,
-      openedAt,
-      updateAt,
-      openPrice,
-      currentPrice,
-      currentTickValue,
-      stopLoss,
-      takeProfit,
-      volume,
-      swap,
-      profit,
-      clientId,
-      commission,
-      reason,
-      brokerComment,
-    }));
+    return positions.map(
+      ({
+        id,
+        type,
+        symbol,
+        time: openedAt,
+        updateTime: updateAt,
+        openPrice,
+        currentPrice,
+        currentTickValue,
+        stopLoss,
+        takeProfit,
+        volume,
+        swap,
+        profit,
+        clientId,
+        commission,
+        reason,
+        brokerComment,
+      }) => ({
+        id,
+        type: type === "POSITION_TYPE_BUY" ? "BUY" : "SELL",
+        symbol: symbol as Symbol,
+        openedAt,
+        updateAt,
+        openPrice,
+        currentPrice,
+        currentTickValue,
+        stopLoss,
+        takeProfit,
+        volume,
+        swap,
+        profit,
+        clientId,
+        commission,
+        reason,
+        brokerComment,
+      })
+    );
   }
 
   private async connectToBroker(): Promise<void> {
     try {
-      const account = await this.client.metatraderAccountApi.getAccountByToken();
+      const account =
+        await this.client.metatraderAccountApi.getAccountByToken();
       this.connection = account.getRPCConnection();
 
       await this.connection.connect();
       await this.connection.waitSynchronized();
     } catch (error) {
-      logger.error('Error connecting to the broker', { error });
+      logger.error("Error connecting to the broker", { error });
       process.exit(0);
     }
   }
@@ -119,7 +121,7 @@ export class AccountManagement {
     try {
       this.client.close();
     } catch (error) {
-      logger.error('Error disconnecting from the broker', { error });
+      logger.error("Error disconnecting from the broker", { error });
     }
   }
 }

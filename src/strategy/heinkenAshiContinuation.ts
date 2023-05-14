@@ -1,8 +1,8 @@
 import { Bar } from "../analysis/bar";
 import { EmaInput } from "../analysis/indicator";
 
-export type SignalType = 'LONG' | 'SHORT' | 'HOLD';
-type Trend = 'BULLISH' | 'BEARISH' | 'FLAT';
+export type SignalType = "LONG" | "SHORT" | "HOLD";
+type Trend = "BULLISH" | "BEARISH" | "FLAT";
 
 export class HeikenAshiContinuation {
   private emaCalculator: ((input: EmaInput) => number[]) | undefined;
@@ -12,7 +12,7 @@ export class HeikenAshiContinuation {
   private readonly SLOW_EMA_PERIOD = 200;
 
   static build() {
-    return new HeikenAshiContinuation()
+    return new HeikenAshiContinuation();
   }
 
   withEmaIndicator(fn: (input: EmaInput) => number[]): HeikenAshiContinuation {
@@ -24,21 +24,37 @@ export class HeikenAshiContinuation {
   withHeikenAshiBars(bars: Bar[]): HeikenAshiContinuation {
     this.bars = bars;
 
-    return this
+    return this;
   }
 
   analyse(): SignalType {
     if (this.emaCalculator === undefined) {
-      throw new Error('Did you call forget to "withEmaIndicator" before analyse?')
+      throw new Error(
+        'Did you call forget to "withEmaIndicator" before analyse?'
+      );
     }
 
     if (this.bars === undefined) {
-      throw new Error('Did you call forget to "withHeikenAshiBars" before analyse?')
+      throw new Error(
+        'Did you call forget to "withHeikenAshiBars" before analyse?'
+      );
     }
 
-    const fastEma = this.emaCalculator({ prices: this.bars, source: 'close', length: this.FAST_EMA_PERIOD })
-    const midEma = this.emaCalculator({ prices: this.bars, source: 'close', length: this.MID_EMA_PERIOD })
-    const slowEma = this.emaCalculator({ prices: this.bars, source: 'close', length: this.SLOW_EMA_PERIOD })
+    const fastEma = this.emaCalculator({
+      prices: this.bars,
+      source: "close",
+      length: this.FAST_EMA_PERIOD,
+    });
+    const midEma = this.emaCalculator({
+      prices: this.bars,
+      source: "close",
+      length: this.MID_EMA_PERIOD,
+    });
+    const slowEma = this.emaCalculator({
+      prices: this.bars,
+      source: "close",
+      length: this.SLOW_EMA_PERIOD,
+    });
 
     const trend = this.deduceTrend(fastEma, midEma, slowEma);
     const latestBar = this.bars[0];
@@ -46,24 +62,28 @@ export class HeikenAshiContinuation {
     // console.table(this.bars.slice(0, 20).map(bar => ({ ...bar, type: bar.type })))
 
     switch (trend) {
-      case 'BULLISH':
-        return latestBar.type === 'BULL' ? 'LONG' : 'HOLD';
-      case 'BEARISH':
-        return latestBar.type === 'BEAR' ? 'SHORT' : 'HOLD';
+      case "BULLISH":
+        return latestBar.type === "BULL" ? "LONG" : "HOLD";
+      case "BEARISH":
+        return latestBar.type === "BEAR" ? "SHORT" : "HOLD";
       default:
-        return 'HOLD';
+        return "HOLD";
     }
   }
 
-  private deduceTrend(fastEma: number[], midEma: number[], slowEma: number[]): Trend {
+  private deduceTrend(
+    fastEma: number[],
+    midEma: number[],
+    slowEma: number[]
+  ): Trend {
     if (fastEma > midEma && midEma > slowEma) {
-      return 'BULLISH';
+      return "BULLISH";
     }
 
     if (fastEma < midEma && midEma < slowEma) {
-      return 'BEARISH';
+      return "BEARISH";
     }
 
-    return 'FLAT';
+    return "FLAT";
   }
 }

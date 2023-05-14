@@ -7,6 +7,6 @@ const config: Entropy5RobotConfig = {
   grammyBotToken: BOT_TOKEN,
   symbols: SYMBOLS,
   riskAmountPerTrade: 500,
-}
+};
 
 export const handler = Entropy5RobotHandler.build(config);

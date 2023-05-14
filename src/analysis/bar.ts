@@ -12,9 +12,9 @@ export interface BarInput {
   timeframe: Timeframe;
 }
 
-export type BarType = 'BULL' | 'BEAR' | 'LIZARD';
-export type BarColor = 'GREEN' | 'RED';
-export type OHLC = 'open' | 'high' | 'low' | 'close';
+export type BarType = "BULL" | "BEAR" | "LIZARD";
+export type BarColor = "GREEN" | "RED";
+export type OHLC = "open" | "high" | "low" | "close";
 
 export class Bar {
   readonly timeframe: Timeframe;
@@ -30,7 +30,8 @@ export class Bar {
   private readonly DOMINANCE_THRESHOLD = 5;
 
   constructor(input: BarInput) {
-    const { open, close, high, low, digits, startTime, symbol, timeframe } = input;
+    const { open, close, high, low, digits, startTime, symbol, timeframe } =
+      input;
 
     this.timeframe = timeframe;
     this.symbol = symbol;
@@ -61,15 +62,15 @@ export class Bar {
       upperWick: this.upperWick,
       lowerWick: this.lowerWick,
       body: this.body,
-    }
+    };
   }
 
   get color(): BarColor {
     /**
      * We consider doji as RED;
      * It doesn't really matter overall
-    */
-    return this.close > this.open ? 'GREEN' : 'RED';
+     */
+    return this.close > this.open ? "GREEN" : "RED";
   }
 
   get isHealthy(): boolean {
@@ -82,18 +83,18 @@ export class Bar {
     // TODO - Consider bar heath
 
     if (closedHigher && this.lowerWick < 1) {
-      return 'BULL'
+      return "BULL";
     }
 
     if (closedLower && this.upperWick < 1) {
-      return 'BEAR'
+      return "BEAR";
     }
 
-    return 'LIZARD';
+    return "LIZARD";
   }
 
   get upperWick(): number {
-    if (this.color === 'GREEN') {
+    if (this.color === "GREEN") {
       return this.toPip(Math.abs(this.high - this.close));
     }
 
@@ -101,7 +102,7 @@ export class Bar {
   }
 
   get lowerWick(): number {
-    if (this.color === 'GREEN') {
+    if (this.color === "GREEN") {
       return this.toPip(Math.abs(this.low - this.open));
     }
 
@@ -120,7 +121,7 @@ export class Bar {
     let factor = 0;
 
     if (this.digits <= 3) {
-      factor = 0.01
+      factor = 0.01;
     } else if (this.digits >= 4) {
       factor = 0.0001;
     }

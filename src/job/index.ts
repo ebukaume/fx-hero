@@ -1,6 +1,10 @@
-
-import { ToadScheduler, AsyncTask, CronSchedule, CronJob } from 'toad-scheduler';
-import { logger } from '../util/logger';
+import {
+  ToadScheduler,
+  AsyncTask,
+  CronSchedule,
+  CronJob,
+} from "toad-scheduler";
+import { logger } from "../util/logger";
 
 interface JobInput {
   name: string;
@@ -13,18 +17,16 @@ export class Job {
     const scheduler = new ToadScheduler();
 
     input.forEach(({ name, cronExpression, executor }) => {
-      const task = new AsyncTask(
-        name,
-        executor,
-        this.handleError.bind(this),
-      )
-      const job = new CronJob({ cronExpression }, task, { preventOverrun: true })
+      const task = new AsyncTask(name, executor, this.handleError.bind(this));
+      const job = new CronJob({ cronExpression }, task, {
+        preventOverrun: true,
+      });
 
-      scheduler.addCronJob(job)
+      scheduler.addCronJob(job);
     });
   }
 
   static handleError(error: Error): void {
-    logger.error('Error running job', { error });
+    logger.error("Error running job", { error });
   }
 }

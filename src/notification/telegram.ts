@@ -4,11 +4,11 @@ import { logger } from "../util/logger";
 import { Symbol } from "../config";
 
 export interface TelegramDriver {
-  client: Bot
+  client: Bot;
 }
 
 export interface TelegramConfig {
-  chatId: string
+  chatId: string;
 }
 
 export interface SignalInput {
@@ -23,10 +23,10 @@ export interface SignalInput {
 }
 
 export class Telegram {
-  private constructor(private readonly client: Bot, private chatId: string) { }
+  private constructor(private readonly client: Bot, private chatId: string) {}
 
   static build(driver: TelegramDriver, config: TelegramConfig): Telegram {
-    return new Telegram(driver.client, config.chatId)
+    return new Telegram(driver.client, config.chatId);
   }
 
   async sendMessage(input: SignalInput): Promise<void> {
@@ -34,21 +34,27 @@ export class Telegram {
     const message = `
     ${arrow} ${input.type} Signal ${arrow}
 
-    <strong>${input.type.toString()} ${input.symbol} now @ ${input.entry}</strong>
+    <strong>${input.type.toString()} ${input.symbol} now @ ${
+      input.entry
+    }</strong>
 
     Stoploss: ${input.stoploss} (-${input.risk})
     target: ${input.target} (+${input.reward})
     R/R: ${input.rewardToRiskRatio}
     
-    ${(new Date()).toUTCString()}
+    ${new Date().toUTCString()}
     `;
 
-    await this.client.api.sendMessage(this.chatId, message, { parse_mode: 'HTML' });
+    await this.client.api.sendMessage(this.chatId, message, {
+      parse_mode: "HTML",
+    });
 
-    logger.info('Notified Telegram Bot', { input, chatId: this.chatId });
+    logger.info("Notified Telegram Bot", { input, chatId: this.chatId });
   }
 
   private getArrow(type: TradeType): string {
-    return type === 'BUY' ? '&#8679; &#8679; &#8679;' : '&#8681; &#8681; &#8681;'
+    return type === "BUY"
+      ? "&#8679; &#8679; &#8679;"
+      : "&#8681; &#8681; &#8681;";
   }
 }

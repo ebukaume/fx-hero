@@ -10,11 +10,11 @@ export class DomainErrror extends Error {
   }
 
   static BadRequest(issues: Issues): DomainErrror {
-    return new DomainErrror('Bad input', 400, issues);
+    return new DomainErrror("Bad input", 400, issues);
   }
 
   static Unauthorized(): DomainErrror {
-    return new DomainErrror('Please login', 401);
+    return new DomainErrror("Please login", 401);
   }
 
   static Forbidden(): DomainErrror {
@@ -26,7 +26,7 @@ export class DomainErrror extends Error {
 
   static NotFound(issues?: Issues): DomainErrror {
     return new DomainErrror(
-      'The resource you requested does not exist',
+      "The resource you requested does not exist",
       404,
       issues
     );
@@ -34,17 +34,17 @@ export class DomainErrror extends Error {
 
   static UnprocessableEntity(issues?: Issues): DomainErrror {
     return new DomainErrror(
-      'We are unable to process this request',
+      "We are unable to process this request",
       422,
       issues
     );
   }
 
   static InternalError(issues: Issues): DomainErrror {
-    return new DomainErrror('Something went wrong!', 500, issues);
+    return new DomainErrror("Something went wrong!", 500, issues);
   }
 
   static BadGateway(): DomainErrror {
-    return new DomainErrror('Bad Gateway', 502);
+    return new DomainErrror("Bad Gateway", 502);
   }
 }

@@ -20,7 +20,7 @@ interface Config {
 
 export class Entropy5RobotUsecase {
   private readonly NUMBER_OF_BARS_TO_FETCH = 100;
-  private readonly TIME_FRAME: Timeframe = '1d';
+  private readonly TIME_FRAME: Timeframe = "1d";
 
   constructor(
     private terminal: Terminal,
@@ -28,29 +28,53 @@ export class Entropy5RobotUsecase {
     private accountManagment: AccountManagement,
     private telegram: Telegram,
     private symbols: Symbol[],
-    private riskAmountPerTrade: number,
-  ) { }
+    private riskAmountPerTrade: number
+  ) {}
 
   static build(config: Config): Entropy5RobotUsecase {
-    const { metaAccessToken, chatId, grammyBotToken, symbols, riskAmountPerTrade } = config;
+    const {
+      metaAccessToken,
+      chatId,
+      grammyBotToken,
+      symbols,
+      riskAmountPerTrade,
+    } = config;
 
     const metaApiClient = new MetaApi(metaAccessToken);
 
     const terminal = Terminal.build({ client: metaApiClient });
     const trader = Trader.build({ client: metaApiClient });
-    const accountManagement = AccountManagement.build({ client: metaApiClient });
+    const accountManagement = AccountManagement.build({
+      client: metaApiClient,
+    });
 
-    const telegram = Telegram.build({ client: new Bot(grammyBotToken) }, { chatId });
+    const telegram = Telegram.build(
+      { client: new Bot(grammyBotToken) },
+      { chatId }
+    );
 
-    return new this(terminal, trader, accountManagement, telegram, symbols, riskAmountPerTrade);
+    return new this(
+      terminal,
+      trader,
+      accountManagement,
+      telegram,
+      symbols,
+      riskAmountPerTrade
+    );
   }
 
   async exec(): Promise<void> {
-    logger.info('Checking for signals!', { NUMBER_OF_SYMBOLS: this.symbols.length });
+    logger.info("Checking for signals!", {
+      NUMBER_OF_SYMBOLS: this.symbols.length,
+    });
 
-    const priceData = await this.terminal.getHeikenAshiBarsForSymbols(this.symbols, this.TIME_FRAME, this.NUMBER_OF_BARS_TO_FETCH);
+    const priceData = await this.terminal.getHeikenAshiBarsForSymbols(
+      this.symbols,
+      this.TIME_FRAME,
+      this.NUMBER_OF_BARS_TO_FETCH
+    );
 
-    await Promise.all(priceData.map(data => this.process(data)))
+    await Promise.all(priceData.map((data) => this.process(data)));
   }
 
   private async process(bars: Bar[]): Promise<void> {
@@ -58,21 +82,25 @@ export class Entropy5RobotUsecase {
     const signal = strategy.signal(bars);
 
     if (!signal) {
-      logger.info('No signal at this time', { symbol: bars[0].symbol });
+      logger.info("No signal at this time", { symbol: bars[0].symbol });
       return;
     }
 
-    const lot = this.calculateLotSize(this.riskAmountPerTrade, signal.riskInPips);
+    const lot = this.calculateLotSize(
+      this.riskAmountPerTrade,
+      signal.riskInPips
+    );
 
     const orderId = await this.trader.open({
       ...signal,
-      lot
+      lot,
     });
 
-    const { balance, currency } = await this.accountManagment.getAccountInformation();
+    const { balance, currency } =
+      await this.accountManagment.getAccountInformation();
     await this.notify(signal, bars[0]);
 
-    logger.info('Position opened!', { orderId, lot, currency, balance });
+    logger.info("Position opened!", { orderId, lot, currency, balance });
   }
 
   private calculateLotSize(amount: number, riskInPips: number): number {
@@ -85,7 +113,7 @@ export class Entropy5RobotUsecase {
 
   private async notify(signal: Signal, bar: Bar): Promise<void> {
     const { entry, stoploss, target } = signal;
-    const risk = this.normalizePips(Math.abs(entry - stoploss), bar.digits)
+    const risk = this.normalizePips(Math.abs(entry - stoploss), bar.digits);
     const reward = this.normalizePips(Math.abs(entry - target), bar.digits);
 
     await this.telegram.sendMessage({

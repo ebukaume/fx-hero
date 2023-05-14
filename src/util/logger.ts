@@ -1,6 +1,6 @@
 import { Lookup } from "./type";
 
-type Level = 'INFO' | 'WARN' | 'DEBUG' | 'ERROR';
+type Level = "INFO" | "WARN" | "DEBUG" | "ERROR";
 
 export class Logger {
   private static client: Console;
@@ -16,19 +16,19 @@ export class Logger {
   }
 
   info(message: string, meta?: Lookup): void {
-    this.log('INFO', message, meta);
+    this.log("INFO", message, meta);
   }
 
   debug(message: string, meta?: Lookup): void {
-    this.log('DEBUG', message, meta);
+    this.log("DEBUG", message, meta);
   }
 
   warn(message: string, meta?: Lookup): void {
-    this.log('WARN', message, meta);
+    this.log("WARN", message, meta);
   }
 
   error(message: string, meta?: Lookup): void {
-    this.log('ERROR', message, meta);
+    this.log("ERROR", message, meta);
   }
 
   private log(level: Level, message: string, meta?: Lookup): void {

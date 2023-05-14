@@ -1,8 +1,8 @@
-import { type Duration, type Stack } from 'aws-cdk-lib';
-import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
-import { Lookup } from '../../src/util/type';
-import { BaseStackProps } from '../config';
-import { ACCESS_TOKEN, BOT_TOKEN, CHAT_ID } from '../../src/config';
+import { type Duration, type Stack } from "aws-cdk-lib";
+import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
+import { Lookup } from "../../src/util/type";
+import { BaseStackProps } from "../config";
+import { ACCESS_TOKEN, BOT_TOKEN, CHAT_ID } from "../../src/config";
 
 export interface BaseLambdaProps {
   name: string;
@@ -11,7 +11,7 @@ export interface BaseLambdaProps {
   memorySize?: number;
   timeout?: Duration;
   env?: Lookup<string>;
-  group: 'robot';
+  group: "robot";
 }
 
 type NewType = BaseStackProps & BaseLambdaProps;

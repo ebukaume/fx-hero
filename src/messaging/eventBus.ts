@@ -1,4 +1,4 @@
-type Topic = 'PRICE_FEED' | 'TRADE_SIGNAL'
+type Topic = "PRICE_FEED" | "TRADE_SIGNAL";
 
 export class EventBus {
   private subscriptions: Map<Topic, Function[]>;
@@ -28,6 +28,6 @@ export class EventBus {
       return;
     }
 
-    subscribers.forEach(subscriber => subscriber(message))
+    subscribers.forEach((subscriber) => subscriber(message));
   }
 }
