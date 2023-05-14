@@ -4,11 +4,12 @@ import { Indicator } from "../../analysis/indicator";
 import { Terminal, Timeframe } from "../../marketFeed/terminal";
 import { Telegram } from "../../notification/telegram";
 import { Bot } from "grammy";
-import { EntropyStrategy, Signal } from "../../strategy/entropy";
+import { EntropyStrategy } from "../../strategy/entropy";
 import { Bar } from "../../analysis/bar";
 import { AccountManagement } from "../../account/management";
 import { logger } from "../../util/logger";
 import { Pair } from "../../config";
+import { Metric } from "../../util/metric";
 
 interface Config {
   chatId: string;

@@ -1,6 +1,7 @@
 import MetaApi, { RpcMetaApiConnectionInstance } from "metaapi.cloud-sdk";
 import { logger } from "../util/logger";
 import { Pair } from "../config";
+import { Metric } from "../util/metric";
 
 interface TraderDriver {
   client: MetaApi;
@@ -8,7 +9,7 @@ interface TraderDriver {
 
 export type TradeType = "BUY" | "SELL";
 
-interface TraderParam {
+export interface TraderParam {
   type: TradeType;
   pair: Pair;
   lot: number;
@@ -90,6 +91,7 @@ export class Trader {
       throw new Error(result.stringCode);
     }
 
+    Metric.countTrade({ type: "BUY", pair, lot, stoploss, target });
     return result.orderId;
   }
 
@@ -111,6 +113,7 @@ export class Trader {
       throw new Error(result.stringCode);
     }
 
+    Metric.countTrade({ type: "SELL", pair, lot, stoploss, target });
     return result.orderId;
   }
 }

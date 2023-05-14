@@ -32,6 +32,7 @@ export class RobotStack extends NestedStack {
     const entropy5 = "entropy5";
     const entropy5Lambda = this.createLambda({
       name: entropy5,
+      description: "Scalps M5 Heiken Ashi candle for quick profits",
       entry: InfraUtil.resolveRobotHandlerPath(entropy5),
       group: "robot",
     });

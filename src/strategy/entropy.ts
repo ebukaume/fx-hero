@@ -2,6 +2,7 @@ import { TradeType } from "../account/trader";
 import { Bar } from "../analysis/bar";
 import { Indicator } from "../analysis/indicator";
 import { Pair } from "../config";
+import { Metric } from "../util/metric";
 
 type Trend = "BULLISH" | "BEARISH" | "FLAT";
 
@@ -75,7 +76,7 @@ export class EntropyStrategy {
     const rewardInPips = this.toPip(target - entry);
     const rewardToRiskRatio = +((rewardInPips / riskInPips) * -1).toFixed(2);
 
-    return {
+    const signal: Signal = {
       type: "BUY",
       pair,
       entry,
@@ -85,6 +86,9 @@ export class EntropyStrategy {
       rewardInPips,
       rewardToRiskRatio,
     };
+
+    Metric.countSignal(signal);
+    return signal;
   }
 
   private checkForBearishSignal(): Signal | undefined {
@@ -100,7 +104,7 @@ export class EntropyStrategy {
     const rewardInPips = this.toPip(entry - target);
     const rewardToRiskRatio = +((rewardInPips / riskInPips) * -1).toFixed(2);
 
-    return {
+    const signal: Signal = {
       type: "SELL",
       pair,
       entry,
@@ -110,6 +114,9 @@ export class EntropyStrategy {
       rewardInPips,
       rewardToRiskRatio,
     };
+
+    Metric.countSignal(signal);
+    return signal;
   }
 
   /**

@@ -1,6 +1,6 @@
 import { Lookup } from "./type";
 
-type Level = "INFO" | "WARN" | "DEBUG" | "ERROR";
+type Level = "INFO" | "WARN" | "DEBUG" | "ERROR" | "METRIC";
 
 export class Logger {
   private static client: Console;
@@ -29,6 +29,10 @@ export class Logger {
 
   error(message: string, meta?: Lookup): void {
     this.log("ERROR", message, meta);
+  }
+
+  metric(message: string, meta?: Lookup): void {
+    this.log("METRIC", message, meta);
   }
 
   private log(level: Level, message: string, meta?: Lookup): void {
