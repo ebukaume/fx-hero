@@ -31,7 +31,7 @@ export class Entropy5RobotUsecase {
     private telegram: Telegram,
     private symbols: Pair[],
     private riskAmountPerTrade: number
-  ) {}
+  ) { }
 
   static build(config: Config): Entropy5RobotUsecase {
     const {
@@ -115,6 +115,6 @@ export class Entropy5RobotUsecase {
      * 0.01 => 20 pips == 2
      * 2 / (20 / 10) = 0.01
      */
-    return amount / (riskInPips * 10);
+    return +(amount / (riskInPips * 10)).toFixed(2);
   }
 }
