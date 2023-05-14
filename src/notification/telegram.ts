@@ -1,7 +1,7 @@
 import { Bot } from "grammy";
 import { TradeType } from "../account/trader";
 import { logger } from "../util/logger";
-import { Pair } from "../config";
+import { Signal } from "../strategy/entropy";
 
 export interface TelegramDriver {
   client: Bot;
@@ -11,17 +11,6 @@ export interface TelegramConfig {
   chatId: string;
 }
 
-export interface SignalInput {
-  type: TradeType;
-  pair: Pair;
-  entry: number;
-  stoploss: number;
-  target: number;
-  risk: number;
-  reward: number;
-  rewardToRiskRatio: number;
-}
-
 export class Telegram {
   private constructor(private readonly client: Bot, private chatId: string) {}
 
@@ -29,17 +18,21 @@ export class Telegram {
     return new Telegram(driver.client, config.chatId);
   }
 
-  async sendSignal(input: SignalInput): Promise<void> {
+  async sendSignal(input: Signal): Promise<void> {
     const arrow = this.getArrow(input.type);
     const message = `
     ${arrow} ${input.type} Signal ${arrow}
 
-    <strong>${input.type.toString()} ${input.pair} now @ ${input.entry}</strong>
-
-    Stoploss: ${input.stoploss} (-${input.risk})
-    target: ${input.target} (+${input.reward})
-    R/R: ${input.rewardToRiskRatio}
-    
+    <strong>${input.type.toString()} ${input.pair} @ ${input.entry}</strong>
+    <em>
+      <span class="tg-spoiler">Stoploss = ${input.stoploss} (${
+      input.riskInPips
+    } pips)</span>
+      <span class="tg-spoiler">Target = ${input.target} (${
+      input.rewardInPips
+    } pips)</span>
+      <span class="tg-spoiler">R:R = ${input.rewardToRiskRatio}</span>
+    </em>
     ${new Date().toUTCString()}
     `;
 
@@ -47,7 +40,7 @@ export class Telegram {
       parse_mode: "HTML",
     });
 
-    logger.info("Notified Telegram Bot", { input, chatId: this.chatId });
+    logger.info("Sent signal to Telegram", { input, chatId: this.chatId });
   }
 
   private getArrow(type: TradeType): string {

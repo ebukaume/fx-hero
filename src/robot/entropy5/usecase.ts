@@ -19,8 +19,9 @@ interface Config {
 }
 
 export class Entropy5RobotUsecase {
+  private readonly NAME = "Entropy5Robot";
   private readonly NUMBER_OF_BARS_TO_FETCH = 100;
-  private readonly TIME_FRAME: Timeframe = "1d";
+  private readonly TIME_FRAME: Timeframe = "5m";
 
   constructor(
     private terminal: Terminal,
@@ -64,7 +65,7 @@ export class Entropy5RobotUsecase {
   }
 
   async exec(): Promise<void> {
-    logger.info("Checking for signals!", {
+    logger.info(`[${this.NAME}] Checking for signals!`, {
       NUMBER_OF_PAIRS: this.symbols.length,
     });
 
@@ -88,7 +89,7 @@ export class Entropy5RobotUsecase {
 
     const lot = this.calculateLotSize(
       this.riskAmountPerTrade,
-      signal.riskInPips
+      Math.abs(signal.riskInPips)
     );
 
     // const orderId = await this.trader.open({
@@ -98,7 +99,7 @@ export class Entropy5RobotUsecase {
 
     const { balance, currency } =
       await this.accountManagment.getAccountInformation();
-    await this.notify(signal, bars[0]);
+    await this.telegram.sendSignal(signal);
 
     logger.info("Position opened!", {
       orderId: "orderId",
@@ -114,21 +115,5 @@ export class Entropy5RobotUsecase {
      * 2 / (20 / 10) = 0.01
      */
     return amount / (riskInPips * 10);
-  }
-
-  private async notify(signal: Signal, bar: Bar): Promise<void> {
-    const { entry, stoploss, target } = signal;
-    const risk = this.normalizePips(Math.abs(entry - stoploss), bar.digits);
-    const reward = this.normalizePips(Math.abs(entry - target), bar.digits);
-
-    await this.telegram.sendSignal({
-      ...signal,
-      risk,
-      reward,
-    });
-  }
-
-  private normalizePips(value: number, digits: number): number {
-    return Math.pow(10, digits) * value;
   }
 }

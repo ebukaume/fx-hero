@@ -9,9 +9,10 @@ export interface Signal {
   type: TradeType;
   pair: Pair;
   entry: number;
-  riskInPips: number;
   stoploss: number;
   target: number;
+  riskInPips: number;
+  rewardInPips: number;
   rewardToRiskRatio: number;
 }
 
@@ -21,7 +22,7 @@ export class EntropyStrategy {
   private readonly RETRACEMENT_LOOK_BACK_WINDOW = 3;
   private readonly FRESHNESS_LOOK_BACK_WINDOW = 4;
   private readonly WRAP_RATE_THRESHOLD = 0.4;
-  private readonly STOPLOSS_CLEARANCE = 2;
+  private readonly STOPLOSS_CLEARANCE = 10; // 1 standard pip
   private readonly REWARD_TO_RISK_RATIO = 1.1;
 
   private fastEma: number[] = [];
@@ -64,20 +65,25 @@ export class EntropyStrategy {
   private checkForBullishSignal(): Signal | undefined {
     const { type, pair, close: entry } = this.bars[0];
 
-    // if (type !== "BULL" || !this.isSignal()) {
-    //   return;
-    // }
+    if (type !== "BULL" || !this.isSignal()) {
+      return;
+    }
 
-    const riskInPips = this.riskInPips;
+    const stoploss = this.stoploss;
+    const target = this.target("BUY", entry, stoploss);
+    const riskInPips = this.toPip(stoploss - entry);
+    const rewardInPips = this.toPip(target - entry);
+    const rewardToRiskRatio = +((rewardInPips / riskInPips) * -1).toFixed(2);
 
     return {
       type: "BUY",
       pair,
       entry,
-      riskInPips: this.toPip(riskInPips),
-      stoploss: this.stoploss(riskInPips),
-      target: this.target(riskInPips),
-      rewardToRiskRatio: this.REWARD_TO_RISK_RATIO,
+      stoploss,
+      target,
+      riskInPips,
+      rewardInPips,
+      rewardToRiskRatio,
     };
   }
 
@@ -88,16 +94,21 @@ export class EntropyStrategy {
       return;
     }
 
-    const riskInPips = this.riskInPips;
+    const stoploss = this.stoploss;
+    const target = this.target("SELL", entry, stoploss);
+    const riskInPips = this.toPip(entry - stoploss);
+    const rewardInPips = this.toPip(entry - target);
+    const rewardToRiskRatio = +((rewardInPips / riskInPips) * -1).toFixed(2);
 
     return {
       type: "SELL",
       pair,
       entry,
+      stoploss,
+      target,
       riskInPips,
-      stoploss: this.stoploss(riskInPips),
-      target: this.target(riskInPips),
-      rewardToRiskRatio: this.REWARD_TO_RISK_RATIO,
+      rewardInPips,
+      rewardToRiskRatio,
     };
   }
 
@@ -175,9 +186,7 @@ export class EntropyStrategy {
     }
   }
 
-  private get riskInPips(): number {
-    const { close: entryPrice } = this.bars[0];
-
+  private get stoploss(): number {
     switch (this.trend) {
       case "BULLISH":
         const swingLow = Math.min(
@@ -185,62 +194,45 @@ export class EntropyStrategy {
             .slice(0, this.FRESHNESS_LOOK_BACK_WINDOW)
             .map((bar) => bar.low)
         );
-        const stopLevelLow = swingLow + this.toPip(this.STOPLOSS_CLEARANCE);
-
-        return this.toPip(Math.abs(stopLevelLow - entryPrice));
+        return this.round(swingLow - this.toPoint(this.STOPLOSS_CLEARANCE));
       case "BEARISH":
-        const swingHigh = Math.min(
+        const swingHigh = Math.max(
           ...this.bars
             .slice(0, this.FRESHNESS_LOOK_BACK_WINDOW)
             .map((bar) => bar.high)
         );
-        const stopLevelHigh = swingHigh + this.toPip(this.STOPLOSS_CLEARANCE);
-
-        return this.toPip(Math.abs(stopLevelHigh - entryPrice));
+        return this.round(swingHigh + this.toPoint(this.STOPLOSS_CLEARANCE));
       default:
         return 0;
     }
   }
 
-  private stoploss(margin: number): number {
-    const { close: entryPrice } = this.bars[0];
+  private target(
+    type: TradeType,
+    entryPrice: number,
+    stoploss: number
+  ): number {
+    const risk = Math.abs(entryPrice - stoploss);
 
-    switch (this.trend) {
-      case "BULLISH":
-        return entryPrice - margin;
-      case "BEARISH":
-        return entryPrice + margin;
+    switch (type) {
+      case "BUY":
+        return this.round(entryPrice + risk * this.REWARD_TO_RISK_RATIO);
+      case "SELL":
+        return this.round(entryPrice - risk * this.REWARD_TO_RISK_RATIO);
       default:
         return 0;
     }
   }
 
-  private target(stopMargin: number): number {
-    const { close: entryPrice } = this.bars[0];
+  private toPoint(pips: number): number {
+    return this.round(pips / Math.pow(10, this.bars[0].digits));
+  }
 
-    switch (this.trend) {
-      case "BULLISH":
-        return this.round(entryPrice + stopMargin * this.REWARD_TO_RISK_RATIO);
-      case "BEARISH":
-        return this.round(entryPrice - stopMargin * this.REWARD_TO_RISK_RATIO);
-      default:
-        return 0;
-    }
+  private toPip(points: number): number {
+    return this.round(points * Math.pow(10, this.bars[0].digits));
   }
 
   private round(value: number): number {
     return Number(value.toFixed(this.bars[0].digits));
-  }
-
-  private toPip(points: number): number {
-    const { digits } = this.bars[0];
-
-    if (digits <= 3) {
-      return points * 0.01;
-    } else if (digits >= 4) {
-      return points * 0.0001;
-    }
-
-    return 0;
   }
 }

@@ -18,7 +18,7 @@
     "deploy:dev": "ENV=dev cdk deploy --profile dev",
     "swap": "ENV=dev cdk deploy --hotswap",
     "watch": "ENV=dev cdk watch",
-    "trade:entropy5": "ts-node src/indexts",
+    "trade:entropy5": "ts-node src/index.ts",
     "docker:build:entropy5": "docker build -t trader-entropy5 -f DockerFile.entropy5 .",
     "docker:run:entropy5": "docker run trader-entropy5",
     "prepare": "husky install"
