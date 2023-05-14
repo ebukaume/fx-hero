@@ -27,4 +27,4 @@ export const SYMBOLS_MAPPING = {
 };
 
 export type Symbol = keyof typeof SYMBOLS_MAPPING;
-export const SYMBOLS = Object.keys(SYMBOLS_MAPPING) as unknown as symbol[];
+export const SYMBOLS = Object.keys(SYMBOLS_MAPPING) as unknown as Symbol[];
