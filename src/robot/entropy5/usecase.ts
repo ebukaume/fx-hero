@@ -30,7 +30,7 @@ export class Entropy5RobotUsecase {
     private telegram: Telegram,
     private symbols: Pair[],
     private riskAmountPerTrade: number
-  ) {}
+  ) { }
 
   static build(config: Config): Entropy5RobotUsecase {
     const {
@@ -92,10 +92,10 @@ export class Entropy5RobotUsecase {
       Math.abs(signal.riskInPips)
     );
 
-    // const orderId = await this.trader.open({
-    //   ...signal,
-    //   lot,
-    // });
+    const orderId = await this.trader.open({
+      ...signal,
+      lot,
+    });
 
     const { balance, currency } =
       await this.accountManagment.getAccountInformation();
