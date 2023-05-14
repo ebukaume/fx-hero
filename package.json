@@ -3,32 +3,62 @@
   "version": "1.0.0",
   "description": "An Application to monitor, analyse and trade FX",
   "main": "index.js",
+  "bin": {
+    "infra": "bin/index.js"
+  },
   "scripts": {
+    "build": "tsc",
     "test": "jest",
-    "build": "rm -rf dist/ && tsc",
+    "cdk": "cdk",
+    "format": "prettier --config --write infra/ src/",
+    "fix": "eslint ./**/*.ts --fix",
+    "typeCheck": "tsc --noEmit --skipLibCheck",
+    "lint": "pnpm format && pnpm fix",
+    "synth": "ENV=dev cdk synth",
+    "deploy:dev": "ENV=dev cdk deploy --profile dev",
+    "swap": "ENV=dev cdk deploy --hotswap",
+    "watch": "ENV=dev cdk watch",
     "trade:entropy5": "pnpm build && node dist/index.js",
     "docker:build:entropy5": "docker build -t trader-entropy5 -f DockerFile.entropy5 .",
-    "docker:run:entropy5": "docker run trader-entropy5"
+    "docker:run:entropy5": "docker run trader-entropy5",
+    "prepare": "husky install"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@tsconfig/node18": "^2.0.0",
-    "@types/jest": "^29.5.1",
-    "@types/node": "^18.16.6",
+    "@types/aws-lambda": "^8.10.115",
+    "@types/jest": "^29.4.0",
+    "@types/node": "18.14.6",
+    "aws-cdk": "2.69.0",
+    "esbuild": "^0.17.14",
+    "eslint": "^8.37.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-config-standard-with-typescript": "^34.0.1",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-n": "^15.7.0",
+    "eslint-plugin-promise": "^6.1.1",
     "jest": "^29.5.0",
-    "ts-jest": "^29.1.0",
+    "lint-staged": "^13.2.2",
+    "prettier": "^2.8.8",
+    "ts-jest": "^29.0.5",
+    "ts-mockery": "^1.2.0",
     "ts-node": "^10.9.1",
-    "typescript": "^5.0.4"
+    "typescript": "~4.9.5"
   },
   "dependencies": {
+    "aws-cdk-lib": "2.69.0",
+    "aws-lambda": "^1.0.7",
+    "constructs": "^10.0.0",
     "croner": "^6.0.3",
     "dotenv": "^16.0.3",
     "env-var": "^7.3.1",
     "grammy": "^1.16.0",
+    "husky": "^8.0.3",
     "indicatorts": "^1.0.14",
     "metaapi.cloud-sdk": "^22.1.0",
+    "source-map-support": "^0.5.21",
     "toad-scheduler": "^2.2.0"
   }
 }

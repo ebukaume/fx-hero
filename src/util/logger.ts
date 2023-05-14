@@ -15,12 +15,6 @@ export class Logger {
     Logger.instance = this;
   }
 
-  withNewLine(): Logger {
-    Logger.client.log();
-
-    return this;
-  }
-
   info(message: string, meta?: Lookup): void {
     this.log('INFO', message, meta);
   }
