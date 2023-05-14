@@ -2,7 +2,7 @@
 An Application to monitor, analyse and trade FX
 
 #### Todo
-1. Dockerize app
+1. Add CDK infra and migrate to lambda
 
 
 ### Other strategies to try
