@@ -37,7 +37,7 @@ export class Logger {
 
   private log(level: Level, message: string, meta?: Lookup): void {
     const time = new Date().toISOString();
-    const data = `${message} ${JSON.stringify({ meta })}`;
+    const data = `${message} ${meta ? JSON.stringify(meta) : ''}`;
 
     Logger.client.log(`[${level}] [${time}] ${data}`);
   }
