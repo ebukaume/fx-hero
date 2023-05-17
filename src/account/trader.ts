@@ -19,8 +19,9 @@ export interface TraderParam {
 
 export class Trader {
   private connection!: RpcMetaApiConnectionInstance;
+  private isConnected: boolean = false;
 
-  private constructor(private client: MetaApi) {}
+  private constructor(private client: MetaApi) { }
 
   static build(driver: TraderDriver): Trader {
     return new Trader(driver.client);
@@ -47,11 +48,13 @@ export class Trader {
     const result = await Promise.all(
       orderIds.map((orderId) => this.connection.closePosition(orderId, {}))
     );
-
-    this.disconnectFromBroker();
   }
 
   private async connectToBroker(): Promise<void> {
+    if (this.isConnected) {
+      return;
+    }
+
     try {
       const account =
         await this.client.metatraderAccountApi.getAccountByToken();
@@ -59,15 +62,17 @@ export class Trader {
 
       await this.connection.connect();
       await this.connection.waitSynchronized();
+
+      this.isConnected = true;
     } catch (error) {
       logger.error("Error connecting to the broker", { error });
-      process.exit(0);
     }
   }
 
   private disconnectFromBroker(): void {
     try {
       this.client.close();
+      this.isConnected = false;
     } catch (error) {
       logger.error("Error disconnecting from the broker", { error });
     }
@@ -85,10 +90,12 @@ export class Trader {
       stoploss,
       target
     );
-    this.disconnectFromBroker();
 
-    if (result.stringCode === "ERR_NO_ERROR") {
-      throw new Error(result.stringCode);
+    if (result.stringCode !== "ERR_NO_ERROR") {
+      logger.error(result.stringCode, {
+        trade: { pair, lot, stoploss, target },
+        result,
+      });
     }
 
     Metric.countTrade({ type: "BUY", pair, lot, stoploss, target });
@@ -107,10 +114,12 @@ export class Trader {
       stoploss,
       target
     );
-    this.disconnectFromBroker();
 
-    if (result.stringCode === "ERR_NO_ERROR") {
-      throw new Error(result.stringCode);
+    if (result.stringCode !== "ERR_NO_ERROR") {
+      logger.error(result.stringCode, {
+        trade: { pair, lot, stoploss, target },
+        result,
+      });
     }
 
     Metric.countTrade({ type: "SELL", pair, lot, stoploss, target });

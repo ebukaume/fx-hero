@@ -30,7 +30,9 @@ export class EntropyStrategy {
   private slowEma: number[] = [];
   private bars: Bar[] = [];
 
-  private constructor(private technicalAnalysis: typeof Indicator) {}
+  private calulatedTrend: Trend | undefined;
+
+  private constructor(private technicalAnalysis: typeof Indicator) { }
 
   static build(technicalAnalysis: typeof Indicator) {
     return new EntropyStrategy(technicalAnalysis);
@@ -38,12 +40,12 @@ export class EntropyStrategy {
 
   signal(bars: Bar[]): Signal | undefined {
     this.bars = bars;
-    this.fastEma = this.technicalAnalysis.exponentialMovingAverage({
+    this.fastEma = this.technicalAnalysis.ema({
       prices: this.bars,
       source: "close",
       length: this.FAST_EMA_PERIOD,
     });
-    this.slowEma = this.technicalAnalysis.exponentialMovingAverage({
+    this.slowEma = this.technicalAnalysis.ema({
       prices: this.bars,
       source: "close",
       length: this.SLOW_EMA_PERIOD,
@@ -125,7 +127,9 @@ export class EntropyStrategy {
    * Not new high
    */
   private isSignal(): boolean {
-    return this.hasRetracedIntoFastEma() && this.isFresh();
+    return (
+      this.hasRetracedIntoFastEma() && this.isFresh() && this.isStillBiased()
+    );
   }
 
   /**
@@ -134,6 +138,10 @@ export class EntropyStrategy {
    * BEARISH if fast < slow
    */
   private get trend(): Trend {
+    if (this.calulatedTrend) {
+      return this.calulatedTrend;
+    }
+
     const fastEma = this.fastEma[0];
     const slowEma = this.slowEma[0];
     const lookBackSize = this.SLOW_EMA_PERIOD / 2;
@@ -144,19 +152,21 @@ export class EntropyStrategy {
     );
     const wrapRatio = wrappers.length / lookBackSize;
 
-    if (wrapRatio > this.WRAP_RATE_THRESHOLD) {
-      return "FLAT";
+    switch (true) {
+      case wrapRatio > this.WRAP_RATE_THRESHOLD:
+        this.calulatedTrend = "FLAT";
+        break;
+      case fastEma > slowEma:
+        this.calulatedTrend = "BULLISH";
+        break;
+      case fastEma > slowEma:
+        this.calulatedTrend = "BEARISH";
+        break;
+      default:
+        this.calulatedTrend = "FLAT";
     }
 
-    if (fastEma > slowEma) {
-      return "BULLISH";
-    }
-
-    if (fastEma < slowEma) {
-      return "BEARISH";
-    }
-
-    return "FLAT";
+    return this.calulatedTrend;
   }
 
   private isWithinRange(
@@ -188,6 +198,19 @@ export class EntropyStrategy {
         return window.some((bar) => bar.color === "RED");
       case "BEARISH":
         return window.some((bar) => bar.color === "GREEN");
+      case "FLAT":
+        return false;
+    }
+  }
+
+  private isStillBiased(): boolean {
+    const [signalEma, beforeSignalEma] = this.fastEma.slice(0, 2);
+
+    switch (this.trend) {
+      case "BULLISH":
+        return signalEma > beforeSignalEma;
+      case "BEARISH":
+        return signalEma < beforeSignalEma;
       case "FLAT":
         return false;
     }

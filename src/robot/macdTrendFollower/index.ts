@@ -5,9 +5,9 @@ import {
   PAIRS,
   ACCOUNT_ID,
 } from "../../config";
-import { Entropy5RobotHandler, Entropy5RobotConfig } from "./handler";
+import { MacdTrendFollowerHandler, MacdTrendFollowerConfig } from "./handler";
 
-const config: Entropy5RobotConfig = {
+const config: MacdTrendFollowerConfig = {
   accountId: ACCOUNT_ID,
   signalChatId: SIGNAL_CHAT_ID,
   metaAccessToken: META_API_ACCESS_TOKEN,
@@ -16,4 +16,4 @@ const config: Entropy5RobotConfig = {
   riskAmountPerTrade: 500,
 };
 
-export const handler = Entropy5RobotHandler.build(config);
+export const handler = MacdTrendFollowerHandler.build(config);

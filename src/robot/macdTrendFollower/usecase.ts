@@ -4,11 +4,11 @@ import { Indicator } from "../../analysis/indicator";
 import { Terminal, Timeframe } from "../../marketFeed/terminal";
 import { Telegram } from "../../notification/telegram";
 import { Bot } from "grammy";
-import { EntropyStrategy } from "../../strategy/entropy";
 import { Bar } from "../../analysis/bar";
 import { AccountManagement } from "../../account/management";
 import { logger } from "../../util/logger";
 import { Pair } from "../../config";
+import { MacdStrategy } from "../../strategy/macd";
 
 interface Config {
   signalChatId: string;
@@ -19,10 +19,11 @@ interface Config {
   riskAmountPerTrade: number;
 }
 
-export class Entropy5RobotUsecase {
-  private readonly NAME = "Entropy5Robot";
-  private readonly NUMBER_OF_BARS_TO_FETCH = 100;
-  private readonly TIME_FRAME: Timeframe = "5m";
+export class MacdTrendFollowerUsecase {
+  private readonly NAME = "MacdTrendFollower";
+  private readonly NUMBER_OF_BARS_TO_FETCH = 200;
+  private readonly TREND_TIME_FRAME: Timeframe = "1h";
+  private readonly SIGNAL_TIME_FRAME: Timeframe = "15m";
 
   constructor(
     private terminal: Terminal,
@@ -33,7 +34,7 @@ export class Entropy5RobotUsecase {
     private riskAmountPerTrade: number
   ) {}
 
-  static build(config: Config): Entropy5RobotUsecase {
+  static build(config: Config): MacdTrendFollowerUsecase {
     const {
       metaAccessToken,
       signalChatId,
@@ -76,18 +77,68 @@ export class Entropy5RobotUsecase {
       NUMBER_OF_PAIRS: this.symbols.length,
     });
 
-    const priceData = await this.terminal.getHeikenAshiBarsForSymbols(
-      this.symbols,
-      this.TIME_FRAME,
-      this.NUMBER_OF_BARS_TO_FETCH
-    );
+    // What if we use raw candlesticks for trend?
+    const higherTimeframeHeikenashi =
+      await this.terminal.getHeikenAshiBarsForSymbols(
+        this.symbols,
+        this.TREND_TIME_FRAME,
+        this.NUMBER_OF_BARS_TO_FETCH
+      );
 
-    await Promise.all(priceData.map((data) => this.process(data)));
+    const lowerTimeframeHeikenAshi =
+      await this.terminal.getHeikenAshiBarsForSymbols(
+        this.symbols,
+        this.SIGNAL_TIME_FRAME,
+        this.NUMBER_OF_BARS_TO_FETCH
+      );
+
+    const lowerTimeframeCandlesticks =
+      await this.terminal.getCandelstickBarsForSymbols(
+        this.symbols,
+        this.SIGNAL_TIME_FRAME,
+        this.NUMBER_OF_BARS_TO_FETCH
+      );
+
+    await Promise.all(
+      this.preparePriceData(
+        higherTimeframeHeikenashi,
+        lowerTimeframeHeikenAshi,
+        lowerTimeframeCandlesticks
+      ).map(([trend, signal, raw]) => this.process(trend, signal, raw))
+    );
   }
 
-  private async process(bars: Bar[]): Promise<void> {
-    const strategy = EntropyStrategy.build(Indicator);
-    const signal = strategy.signal(bars);
+  private preparePriceData(
+    higherTimeframeHeikenashi: Bar[][],
+    lowerTimeframeHeikenAshi: Bar[][],
+    lowerTimeframeCandlesticks: Bar[][]
+  ): Bar[][][] {
+    const mapping: Record<string, Bar[][]> = {};
+
+    higherTimeframeHeikenashi.forEach(
+      (data) => (mapping[data[0].toJson().pair] = [data])
+    );
+    lowerTimeframeHeikenAshi.forEach((data) =>
+      mapping[data[0].toJson().pair].push(data)
+    );
+    lowerTimeframeCandlesticks.forEach((data) =>
+      mapping[data[0].toJson().pair].push(data)
+    );
+
+    return Object.values(mapping);
+  }
+
+  private async process(
+    trendBars: Bar[],
+    signalBars: Bar[],
+    rawPrices: Bar[]
+  ): Promise<void> {
+    const signal = MacdStrategy.build(
+      Indicator,
+      trendBars,
+      signalBars,
+      rawPrices
+    ).signal();
 
     if (!signal) {
       return;

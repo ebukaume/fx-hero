@@ -2,7 +2,12 @@
 An Application to monitor, analyse and trade FX
 
 #### Todo
-
+0. Consider MACD when determining pullbacks
+1. Add account report bot
+  1. Daily report
+  2. Weekly report
+  3. Monthly report
+  4. Total report
 
 ### Other strategies to try
 1. In the direction of the trend, enter at healthy bar, exit after 2 consecutive lizards.

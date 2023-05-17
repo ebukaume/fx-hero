@@ -1,10 +1,18 @@
-import MetaApi, { RpcMetaApiConnectionInstance } from "metaapi.cloud-sdk";
+import MetaApi, {
+  RiskManagement,
+  RpcMetaApiConnectionInstance,
+} from "metaapi.cloud-sdk";
 import { TradeType } from "./trader";
 import { logger } from "../util/logger";
 import { Pair } from "../config";
 
 interface AccountManagementDriver {
-  client: MetaApi;
+  rpcClient: MetaApi;
+  riskManagmentClient: RiskManagement;
+}
+
+interface AccountManagementConfig {
+  accountId: string;
 }
 
 interface AccountInformation {
@@ -35,11 +43,19 @@ interface Position {
 
 export class AccountManagement {
   private connection!: RpcMetaApiConnectionInstance;
+  private isConnected: boolean = false;
 
-  private constructor(private client: MetaApi) {}
+  private constructor(
+    private rpcClient: MetaApi,
+    private riskManagementClient: RiskManagement,
+    private accountId: string
+  ) { }
 
-  static build({ client }: AccountManagementDriver): AccountManagement {
-    return new AccountManagement(client);
+  static build(
+    { rpcClient, riskManagmentClient }: AccountManagementDriver,
+    { accountId }: AccountManagementConfig
+  ): AccountManagement {
+    return new AccountManagement(rpcClient, riskManagmentClient, accountId);
   }
 
   async getAccountInformation(): Promise<AccountInformation> {
@@ -47,7 +63,7 @@ export class AccountManagement {
 
     const { balance, equity, currency } =
       await this.connection.getAccountInformation();
-    this.disconnectFromBroker();
+    // this.disconnectFromBroker();
 
     return {
       balance,
@@ -60,7 +76,7 @@ export class AccountManagement {
     await this.connectToBroker();
 
     const positions = await this.connection.getPositions();
-    this.disconnectFromBroker();
+    // this.disconnectFromBroker();
 
     return positions.map(
       ({
@@ -103,10 +119,25 @@ export class AccountManagement {
     );
   }
 
+  async report() {
+    await this.connectToBroker();
+
+    const data =
+      await this.riskManagementClient.riskManagementApi.getEquityChart(
+        this.accountId
+      );
+
+    console.log(data);
+  }
+
   private async connectToBroker(): Promise<void> {
+    if (this.isConnected) {
+      return;
+    }
+
     try {
       const account =
-        await this.client.metatraderAccountApi.getAccountByToken();
+        await this.rpcClient.metatraderAccountApi.getAccountByToken();
       this.connection = account.getRPCConnection();
 
       await this.connection.connect();
@@ -118,7 +149,7 @@ export class AccountManagement {
 
   private disconnectFromBroker(): void {
     try {
-      this.client.close();
+      this.rpcClient.close();
     } catch (error) {
       logger.error("Error disconnecting from the broker", { error });
     }

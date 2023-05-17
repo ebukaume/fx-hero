@@ -1,8 +1,8 @@
 import { Pair } from "../../config";
 import { HandlerBuilder } from "../../util/handlerBuilder";
-import { Entropy5RobotUsecase } from "./usecase";
+import { MacdTrendFollowerUsecase } from "./usecase";
 
-export interface Entropy5RobotConfig {
+export interface MacdTrendFollowerConfig {
   signalChatId: string;
   accountId: string;
   metaAccessToken: string;
@@ -11,10 +11,11 @@ export interface Entropy5RobotConfig {
   riskAmountPerTrade: number;
 }
 
-export class Entropy5RobotHandler {
-  private constructor(private usecase: Entropy5RobotUsecase) {}
+export class MacdTrendFollowerHandler {
+  private constructor(private usecase: MacdTrendFollowerUsecase) { }
 
   async handle(time: string) {
+    // TODO - Use time to make invocations idempotent
     await this.usecase.exec();
   }
 
@@ -25,8 +26,8 @@ export class Entropy5RobotHandler {
     metaAccessToken,
     grammyBotToken,
     accountId,
-  }: Entropy5RobotConfig) {
-    const usecase = Entropy5RobotUsecase.build({
+  }: MacdTrendFollowerConfig) {
+    const usecase = MacdTrendFollowerUsecase.build({
       signalChatId,
       metaAccessToken,
       grammyBotToken,
@@ -35,7 +36,7 @@ export class Entropy5RobotHandler {
       accountId,
     });
 
-    const handler = new Entropy5RobotHandler(usecase);
+    const handler = new MacdTrendFollowerHandler(usecase);
 
     return HandlerBuilder.scheduledLambda(handler.handle.bind(handler));
   }

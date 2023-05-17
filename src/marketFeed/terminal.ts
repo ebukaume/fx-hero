@@ -39,10 +39,20 @@ export class Terminal {
       count
     );
 
-    this.client.close();
+    // this.client.close();
     const digits = this.digits[pair];
 
     return this.toBar(timeframe, pair, candles, digits).reverse();
+  }
+
+  async getCandelstickBarsForSymbols(
+    symbols: Pair[],
+    timeframe: Timeframe,
+    count?: number
+  ): Promise<Bar[][]> {
+    return Promise.all(
+      symbols.map((pair) => this.getCandlestickBars(pair, timeframe, count))
+    );
   }
 
   async getHeikenAshiBarsForSymbols(

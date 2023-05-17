@@ -2,7 +2,13 @@ import { type Duration, type Stack } from "aws-cdk-lib";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { Lookup } from "../../src/util/type";
 import { BaseStackProps } from "../config";
-import { ACCESS_TOKEN, BOT_TOKEN, CHAT_ID } from "../../src/config";
+import {
+  META_API_ACCESS_TOKEN,
+  TELEGRAM_BOT_TOKEN,
+  SIGNAL_CHAT_ID,
+  ACCOUNT_REPORT_CHAT_ID,
+  ACCOUNT_ID,
+} from "../../src/config";
 
 export interface BaseLambdaProps {
   name: string;
@@ -31,9 +37,11 @@ export class CustomLambda {
       timeout: props.timeout ?? commonConfig.lambda.timeout,
       memorySize: props.memorySize ?? commonConfig.lambda.memorySize,
       environment: {
-        ACCESS_TOKEN,
-        BOT_TOKEN,
-        CHAT_ID,
+        META_API_ACCESS_TOKEN,
+        TELEGRAM_BOT_TOKEN,
+        ACCOUNT_ID,
+        ACCOUNT_REPORT_CHAT_ID,
+        SIGNAL_CHAT_ID,
         ...props.env,
       },
     });
