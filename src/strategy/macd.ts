@@ -26,6 +26,7 @@ export class MacdStrategy {
   private readonly WRAP_COUNT_THRESHOLD = 3;
   private readonly STOPLOSS_CLEARANCE = 10; // 1 standard pip
   private readonly REWARD_TO_RISK_RATIO = 1.05;
+  private readonly ATR_STOPLOSS_FACTOR = 2;
 
   private trendFastEma: number[] = [];
   private trendSlowEma: number[] = [];
@@ -123,8 +124,9 @@ export class MacdStrategy {
       return;
     }
 
-    const stoploss = this.stoploss;
-    const target = this.target("BUY", entry, stoploss);
+    const stopMargin = this.stopMargin;
+    const stoploss = this.getStoploss(entry, stopMargin);
+    const target = this.getTakeprofit("SELL", entry, stoploss);
     const riskInPips = this.toPip(stoploss - entry);
     const rewardInPips = this.toPip(target - entry);
     const rewardToRiskRatio = +((rewardInPips / riskInPips) * -1).toFixed(2);
@@ -140,10 +142,10 @@ export class MacdStrategy {
       rewardToRiskRatio,
     };
 
-    if (!this.isSafeStoploss(stoploss) || !this.isSafeTarget(target)) {
-      logger.warn("Found signal but unsafe", { signal });
-      return;
-    }
+    // if (!this.isSafeStoploss(stoploss)) {
+    //   logger.warn("Found signal but unsafe", { signal });
+    //   return;
+    // }
 
     Metric.countSignal(signal);
     return signal;
@@ -160,8 +162,9 @@ export class MacdStrategy {
       return;
     }
 
-    const stoploss = this.stoploss;
-    const target = this.target("SELL", entry, stoploss);
+    const stopMargin = this.stopMargin;
+    const stoploss = this.getStoploss(entry, stopMargin);
+    const target = this.getTakeprofit("SELL", entry, stoploss);
     const riskInPips = this.toPip(entry - stoploss);
     const rewardInPips = this.toPip(entry - target);
     const rewardToRiskRatio = +((rewardInPips / riskInPips) * -1).toFixed(2);
@@ -177,10 +180,10 @@ export class MacdStrategy {
       rewardToRiskRatio,
     };
 
-    if (!this.isSafeStoploss(stoploss)) {
-      logger.warn("Found signal but unsafe", { signal });
-      return;
-    }
+    // if (!this.isSafeStoploss(stoploss)) {
+    //   logger.warn("Found signal but unsafe", { signal });
+    //   return;
+    // }
 
     Metric.countSignal(signal);
     return signal;
@@ -229,6 +232,34 @@ export class MacdStrategy {
     }
 
     return this.calulatedTrend;
+  }
+
+  private get stopMargin(): number {
+    return this.atr[0] * this.ATR_STOPLOSS_FACTOR;
+  }
+
+  private getStoploss(entry: number, stopMargin: number): number {
+    switch (this.trend) {
+      case "BULLISH":
+        return entry - stopMargin;
+      case "BEARISH":
+        return entry + stopMargin;
+      default:
+        return 0;
+    }
+  }
+
+  private getTakeprofit(tradeType: TradeType, entry: number, stopMargin: number): number {
+    const reward = stopMargin * this.REWARD_TO_RISK_RATIO;
+
+    switch (tradeType) {
+      case "BUY":
+        return entry + reward;
+      case "SELL":
+        return entry - reward;
+      default:
+        return 0;
+    }
   }
 
   private isWithinRange(
@@ -355,6 +386,8 @@ export class MacdStrategy {
 
   private get stoploss(): number {
     const LOOK_BACK_WINDOW = 3;
+
+    const s = this.atr[0] * 2
 
     switch (this.trend) {
       case "BULLISH":
