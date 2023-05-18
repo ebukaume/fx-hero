@@ -22,7 +22,7 @@ interface Config {
 export class MacdTrendFollowerUsecase {
   private readonly NAME = "MacdTrendFollower";
   private readonly NUMBER_OF_BARS_TO_FETCH = 200;
-  private readonly TREND_TIME_FRAME: Timeframe = "1h";
+  private readonly TREND_TIME_FRAME: Timeframe = "4h";
   private readonly SIGNAL_TIME_FRAME: Timeframe = "15m";
 
   constructor(
@@ -32,7 +32,7 @@ export class MacdTrendFollowerUsecase {
     private telegram: Telegram,
     private symbols: Pair[],
     private riskAmountPerTrade: number
-  ) {}
+  ) { }
 
   static build(config: Config): MacdTrendFollowerUsecase {
     const {

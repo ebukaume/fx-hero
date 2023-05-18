@@ -9,7 +9,7 @@ export interface AccountReportConfig {
 }
 
 export class AccountReportHandler {
-  private constructor(private usecase: AccountReportUsecase) { }
+  private constructor(private usecase: AccountReportUsecase) {}
 
   async handle(time: string) {
     await this.usecase.exec();

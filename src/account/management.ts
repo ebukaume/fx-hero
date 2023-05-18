@@ -49,7 +49,7 @@ export class AccountManagement {
     private rpcClient: MetaApi,
     private riskManagementClient: RiskManagement,
     private accountId: string
-  ) { }
+  ) {}
 
   static build(
     { rpcClient, riskManagmentClient }: AccountManagementDriver,

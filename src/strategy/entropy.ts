@@ -32,7 +32,7 @@ export class EntropyStrategy {
 
   private calulatedTrend: Trend | undefined;
 
-  private constructor(private technicalAnalysis: typeof Indicator) { }
+  private constructor(private technicalAnalysis: typeof Indicator) {}
 
   static build(technicalAnalysis: typeof Indicator) {
     return new EntropyStrategy(technicalAnalysis);

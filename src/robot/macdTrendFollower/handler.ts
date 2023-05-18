@@ -12,7 +12,7 @@ export interface MacdTrendFollowerConfig {
 }
 
 export class MacdTrendFollowerHandler {
-  private constructor(private usecase: MacdTrendFollowerUsecase) { }
+  private constructor(private usecase: MacdTrendFollowerUsecase) {}
 
   async handle(time: string) {
     // TODO - Use time to make invocations idempotent

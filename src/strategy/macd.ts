@@ -83,24 +83,24 @@ export class MacdStrategy {
     this.macd = this.technicalAnalysis.macd(this.signalBars);
     this.atr = this.technicalAnalysis.atr(this.rawPrices);
 
+    console.log({
+      where: "signal",
+      pair: this.trendBars[0].pair,
+      trend: this.trend,
+      barType: this.signalBars[0].type,
+      barColor: this.signalBars[0].color,
+      signalTrend:
+        this.signalFastEma[0] > this.signalSlowEma[0] ? "BULLISH" : "BEARISH",
+      hasRetracedIntoFastSignalEma: this.hasRetracedIntoFastSignalEma(),
+      hasResetMacd: this.hasResetMacd(),
+      justChangedColor: this.justChangedColor(),
+      isStalling: this.isStalling(),
+      atr: this.atr[0],
+    });
+
     if (this.trend === "FLAT") {
       return;
     }
-
-    // console.log({
-    //   where: "signal",
-    //   pair: this.trendBars[0].pair,
-    //   trend: this.trend,
-    //   barType: this.signalBars[0].type,
-    //   barColor: this.signalBars[0].color,
-    //   signalTrend:
-    //     this.signalFastEma[0] > this.signalSlowEma[0] ? "BULLISH" : "BEARISH",
-    //   hasRetracedIntoFastSignalEma: this.hasRetracedIntoFastSignalEma(),
-    //   hasResetMacd: this.hasResetMacd(),
-    //   justChangedColor: this.justChangedColor(),
-    //   isStalling: this.isStalling(),
-    //   atr: this.atr[0],
-    // });
 
     switch (this.trend) {
       case "BULLISH":
@@ -241,15 +241,16 @@ export class MacdStrategy {
 
   private hasRetracedIntoFastSignalEma(): boolean {
     const window = this.signalBars.slice(0, this.RETRACEMENT_LOOK_BACK_WINDOW);
+    const tolerance = this.toPoint(5); // 0.5 pips tolerance
 
     switch (this.trend) {
       case "BULLISH":
         return !!window.find(
-          (bar, index) => bar.low <= this.signalFastEma[index]
+          (bar, index) => bar.low - tolerance <= this.signalFastEma[index]
         );
       case "BEARISH":
         return !!window.find(
-          (bar, index) => bar.high >= this.signalFastEma[index]
+          (bar, index) => bar.high + tolerance >= this.signalFastEma[index]
         );
       default:
         return false;
@@ -353,7 +354,7 @@ export class MacdStrategy {
   }
 
   private get stoploss(): number {
-    const LOOK_BACK_WINDOW = 1;
+    const LOOK_BACK_WINDOW = 3;
 
     switch (this.trend) {
       case "BULLISH":

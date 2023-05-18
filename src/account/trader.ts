@@ -2,6 +2,7 @@ import MetaApi, { RpcMetaApiConnectionInstance } from "metaapi.cloud-sdk";
 import { logger } from "../util/logger";
 import { Pair } from "../config";
 import { Metric } from "../util/metric";
+import { Lookup } from "../util/type";
 
 interface TraderDriver {
   client: MetaApi;
@@ -21,7 +22,7 @@ export class Trader {
   private connection!: RpcMetaApiConnectionInstance;
   private isConnected: boolean = false;
 
-  private constructor(private client: MetaApi) { }
+  private constructor(private client: MetaApi) {}
 
   static build(driver: TraderDriver): Trader {
     return new Trader(driver.client);
@@ -84,22 +85,32 @@ export class Trader {
     stoploss: number,
     target: number
   ): Promise<string> {
-    const result = await this.connection.createMarketBuyOrder(
-      pair.toString(),
-      lot,
-      stoploss,
-      target
-    );
+    try {
+      const result = await this.connection.createMarketBuyOrder(
+        pair.toString(),
+        lot,
+        stoploss,
+        target
+      );
 
-    if (result.stringCode !== "ERR_NO_ERROR") {
       logger.error(result.stringCode, {
         trade: { pair, lot, stoploss, target },
         result,
       });
-    }
 
-    Metric.countTrade({ type: "BUY", pair, lot, stoploss, target });
-    return result.orderId;
+      Metric.countTrade({ type: "BUY", pair, lot, stoploss, target });
+      return result.orderId;
+    } catch (error) {
+      this.logError(error as Error, {
+        type: "BUY",
+        pair,
+        lot,
+        stoploss,
+        target,
+      });
+
+      throw error;
+    }
   }
 
   private async sell(
@@ -108,21 +119,35 @@ export class Trader {
     stoploss: number,
     target: number
   ): Promise<string> {
-    const result = await this.connection.createMarketSellOrder(
-      pair.toString(),
-      lot,
-      stoploss,
-      target
-    );
+    try {
+      const result = await this.connection.createStopSellOrder(
+        pair.toString(),
+        lot,
+        stoploss,
+        target
+      );
 
-    if (result.stringCode !== "ERR_NO_ERROR") {
       logger.error(result.stringCode, {
         trade: { pair, lot, stoploss, target },
         result,
       });
-    }
 
-    Metric.countTrade({ type: "SELL", pair, lot, stoploss, target });
-    return result.orderId;
+      Metric.countTrade({ type: "SELL", pair, lot, stoploss, target });
+      return result.orderId;
+    } catch (error) {
+      this.logError(error as Error, {
+        type: "SELL",
+        pair,
+        lot,
+        stoploss,
+        target,
+      });
+
+      throw error;
+    }
+  }
+
+  private logError(error: Error, meta: Lookup): void {
+    logger.error(error.message, { meta });
   }
 }

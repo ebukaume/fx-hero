@@ -38,7 +38,7 @@ export class RobotStack extends NestedStack {
       group: "robot",
     });
 
-    const every4Hours: CronOptions = {
+    const every5MinutesDuringTradingHours: CronOptions = {
       minute: "*/5",
       hour: "6-15", // 6 AM to 3:55 PM
       weekDay: "2-6",
@@ -46,7 +46,7 @@ export class RobotStack extends NestedStack {
     this.createSchedule(
       entropy5,
       entropy5Lambda.instance,
-      Schedule.cron(every4Hours)
+      Schedule.cron(every5MinutesDuringTradingHours)
     );
 
     const macdTrendFollower = "macdTrendFollower";
@@ -58,14 +58,14 @@ export class RobotStack extends NestedStack {
       group: "robot",
     });
 
-    const every1Hours: CronOptions = {
+    const every15Minutes: CronOptions = {
       minute: "*/15",
       weekDay: "2-6",
     };
     this.createSchedule(
       macdTrendFollower,
       macdTrendFollowerLambda.instance,
-      Schedule.cron(every1Hours)
+      Schedule.cron(every15Minutes)
     );
   }
 

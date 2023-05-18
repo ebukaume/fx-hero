@@ -21,3 +21,7 @@ An Application to monitor, analyse and trade FX
       Stoploss at swing low
       3R target
       Exits at the first close below EMA8 (no matter the P/L)
+2. HHLL Bot
+  1.  Form higher timeframe bia based on if the market is making HH/HL or LL/HL
+  2.  Example (If market is making HH and HL):
+        1.  Only looking for a buy opportunities when the market has registered a new HL

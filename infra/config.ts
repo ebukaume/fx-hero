@@ -10,7 +10,7 @@ export const config = {
   lambda: {
     runtime: Runtime.NODEJS_18_X,
     timeout: Duration.minutes(15),
-    memorySize: 128,
+    memorySize: 512,
   },
 } as const;
 

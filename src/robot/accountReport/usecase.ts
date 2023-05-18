@@ -17,7 +17,7 @@ export class AccountReportUsecase {
   constructor(
     private accountManagment: AccountManagement,
     private telegram: Telegram
-  ) { }
+  ) {}
 
   static build(config: Config): AccountReportUsecase {
     const { metaAccessToken, accountReportChatId, grammyBotToken, accountId } =
