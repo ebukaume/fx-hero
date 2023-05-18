@@ -177,7 +177,7 @@ export class MacdStrategy {
       rewardToRiskRatio,
     };
 
-    if (!this.isSafeStoploss(stoploss) || !this.isSafeTarget(target)) {
+    if (!this.isSafeStoploss(stoploss)) {
       logger.warn("Found signal but unsafe", { signal });
       return;
     }
