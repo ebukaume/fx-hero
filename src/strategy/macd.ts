@@ -113,7 +113,7 @@ export class MacdStrategy {
   }
 
   private checkForBullishSignal(): Signal | undefined {
-    const { type, pair, close: entry } = this.signalBars[0];
+    const { type, pair, close: entry } = this.rawPrices[0];
 
     if (
       type !== "BULL" ||
@@ -150,7 +150,7 @@ export class MacdStrategy {
   }
 
   private checkForBearishSignal(): Signal | undefined {
-    const { type, pair, close: entry } = this.signalBars[0];
+    const { type, pair, close: entry } = this.rawPrices[0];
 
     if (
       type !== "BEAR" ||
@@ -332,7 +332,7 @@ export class MacdStrategy {
       .findIndex(
         (color, index) => color === "RED" && this.macd[index - 1] === "GREEN"
       );
-    const highs = this.signalBars
+    const highs = this.rawPrices
       .slice(startedAt, endedAt + 1)
       .map((bar) => bar.high);
 
@@ -346,7 +346,7 @@ export class MacdStrategy {
       .findIndex(
         (color, index) => color === "GREEN" && this.macd[index - 1] === "RED"
       );
-    const lows = this.signalBars
+    const lows = this.rawPrices
       .slice(startedAt, endedAt + 1)
       .map((bar) => bar.low);
 
