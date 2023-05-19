@@ -117,7 +117,6 @@ export class MacdStrategy {
     const { type, pair, close: entry } = this.rawPrices[0];
 
     if (
-      type !== "BULL" ||
       this.signalSlowEma[0] > this.signalFastEma[0] ||
       !this.isSignal()
     ) {
@@ -155,7 +154,6 @@ export class MacdStrategy {
     const { type, pair, close: entry } = this.rawPrices[0];
 
     if (
-      type !== "BEAR" ||
       this.signalSlowEma[0] < this.signalFastEma[0] ||
       !this.isSignal()
     ) {
